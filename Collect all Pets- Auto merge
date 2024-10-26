@@ -84,3 +84,9 @@ local Button1 = MainTab:CreateButton({
          loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
    end,
 })
+local Button2 = MainTab:CreateButton({
+   Name = "Run CollectAllPets Script",
+   Callback = function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
+   end,
+})
