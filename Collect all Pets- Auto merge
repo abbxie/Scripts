@@ -85,8 +85,15 @@ local Button1 = MainTab:CreateButton({
    end,
 })
 local Button2 = MainTab:CreateButton({
-   Name = "Run CollectAllPets Script",
+   Name = "Auntiafk",
    Callback = function()
          loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
+   end,
+})
+local Button3 = MainTab:CreateButton({
+   Name = "Run CollectAllPets Script2",
+   Callback = function()
+         loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
+
    end,
 })
