@@ -80,6 +80,7 @@ local Toggle2 = MainTab:CreateToggle({
 local Button1 = MainTab:CreateButton({
    Name = "Run CollectAllPets Script",
    Callback = function()
+         --loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
          loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
    end,
 })
