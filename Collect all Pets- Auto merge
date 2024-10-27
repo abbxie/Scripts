@@ -78,7 +78,7 @@ local Toggle2 = MainTab:CreateToggle({
    end,
 })
 local Button1 = MainTab:CreateButton({
-   Name = "Run CollectAllPets Script",
+   Name = "Script 1",
    Callback = function()
          loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
    end,
@@ -90,13 +90,13 @@ local Button2 = MainTab:CreateButton({
    end,
 })
 local Button3 = MainTab:CreateButton({
-   Name = "Run CollectAllPets Script2",
+   Name = "Script2",
    Callback = function()
          loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
    end,
 })
-local Button3 = MainTab:CreateButton({
-   Name = "Run CollectAllPets Script2",
+local Button4 = MainTab:CreateButton({
+   Name = "Remove animations",
    Callback = function()
          -- Remove Lighting Blur
 if game:GetService("Lighting"):FindFirstChild("Blur") then
