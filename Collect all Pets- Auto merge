@@ -13,128 +13,112 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Section Example")
 
--- Variables for the first toggle (Auto Fuse)
-local isRunning = false -- Variable to track if the loop should run for the first toggle
+-- Variables for toggles
+local isRunning = false -- For Auto Fuse toggle
+local isJumping = false -- For Auto Jump toggle
 
+-- Toggle 1: Auto Fuse
 local Toggle1 = MainTab:CreateToggle({
    Name = "Toggle Example (Auto Fuse)",
    CurrentValue = false,
-   Flag = "Toggle1", -- A flag is the identifier for the configuration file
+   Flag = "Toggle1",
    Callback = function(Value)
-      isRunning = Value -- Update the isRunning variable based on the toggle state
-      
+      isRunning = Value
       if Value then
-         -- Start the loop in a coroutine when the toggle is turned on
          coroutine.wrap(function()
             while isRunning do
-               -- Define the args table
                local args = {
-                   [1] = {
-                       [1] = true,
-                       [2] = true,
-                       [3] = true,
-                       [4] = true,
-                       [5] = true,
-                       [6] = true,
-                       [7] = true,
-                       [8] = false
-                   }
+                   [1] = {true, true, true, true, true, true, true, true}
                }
-
-               -- Fire the server event with the args
                game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer(unpack(args))
-
-               wait(1) -- Adjust the wait time as needed
+               wait(1)
             end
-         end)() -- Start the coroutine
+         end)()
       end
    end,
 })
 
--- Variables for the second toggle (Auto Jump)
-local isJumping = false -- Variable to track if the auto-jump loop should run
-
+-- Toggle 2: Auto Jump
 local Toggle2 = MainTab:CreateToggle({
    Name = "Toggle Example (Auto Jump)",
    CurrentValue = false,
-   Flag = "Toggle2", -- A flag is the identifier for the configuration file
+   Flag = "Toggle2",
    Callback = function(Value)
-      isJumping = Value -- Update the isJumping variable based on the toggle state
-      
+      isJumping = Value
       if Value then
-         -- Get the player's character and humanoid
          local player = game.Players.LocalPlayer
          local character = player.Character or player.CharacterAdded:Wait()
          local humanoid = character:WaitForChild("Humanoid")
-
-         -- Start the auto-jump loop in a coroutine
+         
          coroutine.wrap(function()
             while isJumping do
                humanoid.Jump = true
-               wait(0.1) -- Add a slight delay to avoid spam jumping too fast
+               wait(0.1)
             end
-         end)() -- Start the coroutine
+         end)()
       end
    end,
 })
-local Button1 = MainTab:CreateButton({
+
+-- Buttons for loading scripts and actions
+MainTab:CreateButton({
    Name = "Script 1",
    Callback = function()
-         loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
-   end,
-})
-local Button2 = MainTab:CreateButton({
-   Name = "Auntiafk",
-   Callback = function()
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
-   end,
-})
-local Button3 = MainTab:CreateButton({
-   Name = "Script2",
-   Callback = function()
-         loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
+      loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
    end,
 })
 
-local Button5 = MainTab:CreateButton({
-   Name = "Equip best",
+MainTab:CreateButton({
+   Name = "Anti-AFK",
    Callback = function()
-         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
    end,
 })
 
-local Button6 = MainTab:CreateButton({
+MainTab:CreateButton({
+   Name = "Script 2",
+   Callback = function()
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
+   end,
+})
+
+MainTab:CreateButton({
+   Name = "Equip Best",
+   Callback = function()
+      game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+   end,
+})
+
+MainTab:CreateButton({
    Name = "Remote Spy",
    Callback = function()
-         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+      loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
    end,
 })
 
-local Button4 = MainTab:CreateButton({
-   Name = "Remove animations",
+MainTab:CreateButton({
+   Name = "Remove Animations",
    Callback = function()
-         -- Remove Lighting Blur
-if game:GetService("Lighting"):FindFirstChild("Blur") then
-    game:GetService("Lighting").Blur:Destroy()
-end
+      local lighting = game:GetService("Lighting")
+      if lighting:FindFirstChild("Blur") then
+         lighting.Blur:Destroy()
+      end
+      
+      local player = game:GetService("Players").LocalPlayer
+      if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") then
+         if player.PlayerGui.ScreenGui:FindFirstChild("Hatcher") then
+            player.PlayerGui.ScreenGui.Hatcher:Destroy()
+         end
+         if player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse") then
+            player.PlayerGui.ScreenGui.AutoFuse:Destroy()
+         end
+      end
 
--- Remove PlayerGui Hatcher
-local player = game:GetService("Players").LocalPlayer
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Hatcher") then
-    player.PlayerGui.ScreenGui.Hatcher:Destroy()
-end
+      if game:GetService("StarterGui"):FindFirstChild("ScreenGui") and game:GetService("StarterGui").ScreenGui:FindFirstChild("AutoFuse") then
+         game:GetService("StarterGui").ScreenGui.AutoFuse:Destroy()
+      end
 
--- Remove PlayerGui AutoFuse
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse") then
-    player.PlayerGui.ScreenGui.AutoFuse:Destroy()
-end
-
--- Remove StarterGui AutoFuse
-if game:GetService("StarterGui"):FindFirstChild("ScreenGui") and game:GetService("StarterGui").ScreenGui:FindFirstChild("AutoFuse") then
-    game:GetService("StarterGui").ScreenGui.AutoFuse:Destroy()
-end
-
-player.Character.Humanoid.Health = 0
-player:LoadCharacter()
+      player.Character.Humanoid.Health = 0
+      player:LoadCharacter()
    end,
 })
