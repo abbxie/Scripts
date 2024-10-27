@@ -95,6 +95,21 @@ local Button3 = MainTab:CreateButton({
          loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
    end,
 })
+
+local Button5 = MainTab:CreateButton({
+   Name = "Equip best",
+   Callback = function()
+         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+   end,
+})
+
+local Button6 = MainTab:CreateButton({
+   Name = "Remote Spy",
+   Callback = function()
+         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+   end,
+})
+
 local Button4 = MainTab:CreateButton({
    Name = "Remove animations",
    Callback = function()
@@ -121,18 +136,5 @@ end
 
 player.Character.Humanoid.Health = 0
 player:LoadCharacter()
-   end,
-})
-local Button5 = MainTab:CreateButton({
-   Name = "Equip best",
-   Callback = function()
-         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
-   end,
-})
-
-local Button6 = MainTab:CreateButton({
-   Name = "Remote Spy",
-   Callback = function()
-         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
    end,
 })
