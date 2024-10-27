@@ -95,3 +95,31 @@ local Button3 = MainTab:CreateButton({
          loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
    end,
 })
+local Button3 = MainTab:CreateButton({
+   Name = "Run CollectAllPets Script2",
+   Callback = function()
+         -- Remove Lighting Blur
+if game:GetService("Lighting"):FindFirstChild("Blur") then
+    game:GetService("Lighting").Blur:Destroy()
+end
+
+-- Remove PlayerGui Hatcher
+local player = game:GetService("Players").LocalPlayer
+if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Hatcher") then
+    player.PlayerGui.ScreenGui.Hatcher:Destroy()
+end
+
+-- Remove PlayerGui AutoFuse
+if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse") then
+    player.PlayerGui.ScreenGui.AutoFuse:Destroy()
+end
+
+-- Remove StarterGui AutoFuse
+if game:GetService("StarterGui"):FindFirstChild("ScreenGui") and game:GetService("StarterGui").ScreenGui:FindFirstChild("AutoFuse") then
+    game:GetService("StarterGui").ScreenGui.AutoFuse:Destroy()
+end
+
+player.Character.Humanoid.Health = 0
+player:LoadCharacter()
+   end,
+})
