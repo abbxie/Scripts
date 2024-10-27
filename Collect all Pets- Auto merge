@@ -123,3 +123,16 @@ player.Character.Humanoid.Health = 0
 player:LoadCharacter()
    end,
 })
+local Button5 = MainTab:CreateButton({
+   Name = "Equip best",
+   Callback = function()
+         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+   end,
+})
+
+local Button6 = MainTab:CreateButton({
+   Name = "Remote Spy",
+   Callback = function()
+         game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+   end,
+})
