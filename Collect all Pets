@@ -19,6 +19,62 @@ local Section = MainTab:CreateSection("Section Example")
 local isRunning = false -- For Auto Fuse toggle
 local isJumping = false -- For Auto Jump toggle
 
+-- Variables for toggles
+local isCheckingZone = false -- For Zone Checking toggle
+local player = game:GetService("Players").LocalPlayer
+local petScore = player:WaitForChild("CurrentPetScore")
+local shinyScore = player:WaitForChild("ShinyScore")
+
+-- Function to determine the zone number based on pet score and shiny level
+local function getZoneNumber(score, shinyLevel)
+    if score >= 210 and shinyLevel >= 100 then
+        return 8
+    elseif score > 175 then
+        return 6
+    elseif score > 120 then
+        return 5
+    elseif score > 75 then
+        return 4
+    elseif score > 40 then
+        return 3
+    elseif score > 15 then
+        return 2
+    else
+        return 1
+    end
+end
+
+-- Toggle: Start/Stop Zone Check
+local ToggleZoneCheck = MainTab:CreateToggle({
+    Name = "Auto Zone Check",
+    CurrentValue = false,
+    Flag = "ToggleZoneCheck",
+    Callback = function(Value)
+        isCheckingZone = Value
+        if Value then
+            coroutine.wrap(function()
+                while isCheckingZone do
+                    local zoneNumber = getZoneNumber(petScore.Value, shinyScore.Value)
+
+                    -- Fire the event if the player hasn't yet reached zone 8
+                    if zoneNumber == 8 then
+                        break  -- Exit the loop once zone 8 is reached
+                    else
+                        local args = {
+                            [1] = zoneNumber
+                        }
+                        game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(unpack(args))
+                    end
+
+                    wait(1)  -- Wait before checking again
+                end
+            end)()
+        end
+    end,
+})
+
+
+
 -- Toggle 1: Auto Fuse
 local Toggle1 = MainTab:CreateToggle({
    Name = "Toggle Example (Auto Fuse)",
