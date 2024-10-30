@@ -101,25 +101,30 @@ MainTab:CreateButton({
 MainTab:CreateButton({
    Name = "Remove Animations",
    Callback = function()
-      local lighting = game:GetService("Lighting")
-      if lighting:FindFirstChild("Blur") then
-         lighting.Blur:Destroy()
-      end
-      
-      local player = game:GetService("Players").LocalPlayer
-      if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") then
-         if player.PlayerGui.ScreenGui:FindFirstChild("Hatcher") then
-            player.PlayerGui.ScreenGui.Hatcher:Destroy()
-         end
-         if player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse") then
-            player.PlayerGui.ScreenGui.AutoFuse:Destroy()
-         end
-      end
+local replicatedStorage = game:GetService("ReplicatedStorage")
+local lighting = game:GetService("Lighting")
+local player = game:GetService("Players").LocalPlayer
+local starterGui = game:GetService("StarterGui")
 
-      if game:GetService("StarterGui"):FindFirstChild("ScreenGui") and game:GetService("StarterGui").ScreenGui:FindFirstChild("AutoFuse") then
-         game:GetService("StarterGui").ScreenGui.AutoFuse:Destroy()
-      end
+-- Move Lighting Blur to ReplicatedStorage
+if lighting:FindFirstChild("Blur") then
+    lighting.Blur.Parent = replicatedStorage
+end
 
+-- Move PlayerGui Hatcher to ReplicatedStorage
+if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Hatcher") then
+    player.PlayerGui.ScreenGui.Hatcher.Parent = replicatedStorage
+end
+
+-- Move PlayerGui AutoFuse to ReplicatedStorage
+if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse") then
+    player.PlayerGui.ScreenGui.AutoFuse.Parent = replicatedStorage
+end
+
+-- Move StarterGui AutoFuse to ReplicatedStorage
+if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
+    starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
+end
       player.Character.Humanoid.Health = 0
       player:LoadCharacter()
    end,
