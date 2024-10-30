@@ -124,6 +124,7 @@ end
 -- Move StarterGui AutoFuse to ReplicatedStorage
 if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
     starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
+
 end
    end,
 })
