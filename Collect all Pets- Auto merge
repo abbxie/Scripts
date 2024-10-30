@@ -125,7 +125,5 @@ end
 if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
     starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
 end
-      player.Character.Humanoid.Health = 0
-      player:LoadCharacter()
    end,
 })
