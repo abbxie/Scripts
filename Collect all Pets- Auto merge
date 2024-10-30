@@ -124,7 +124,21 @@ end
 -- Move StarterGui AutoFuse to ReplicatedStorage
 if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
     starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
+end
 
+-- Move LocalPlayer's AutoFuse to ReplicatedStorage
+if player:FindFirstChild("AutoFuse") then
+    player.AutoFuse.Parent = replicatedStorage
+end
+
+-- Move AutoFuse under LocalPlayer.PlayerGui.ScreenGui.Main to ReplicatedStorage
+if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Main") and player.PlayerGui.ScreenGui.Main:FindFirstChild("AutoFuse") then
+    player.PlayerGui.ScreenGui.Main.AutoFuse.Parent = replicatedStorage
+end
+
+-- Move Factory under LocalPlayer.PlayerGui.ScreenGui.Main to ReplicatedStorage
+if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Main") and player.PlayerGui.ScreenGui.Main:FindFirstChild("Factory") then
+    player.PlayerGui.ScreenGui.Main.Factory.Parent = replicatedStorage
 end
    end,
 })
