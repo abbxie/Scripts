@@ -7,7 +7,7 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "by Sirius",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = nil, -- Create a custom folder for your hub/game
+        FolderName = nil, -- Specify a folder name if needed
         FileName = "Big Hub"
     }
 })
@@ -21,7 +21,6 @@ local isJumping = false -- For Auto Jump toggle
 local isCheckingZone = false -- For Zone Checking toggle
 local hatchingEnabled = false -- For Hatching toggle
 
--- Player and relevant variables
 local player = game:GetService("Players").LocalPlayer
 local petScore = player:WaitForChild("CurrentPetScore")
 local shinyScore = player:WaitForChild("ShinyScore")
@@ -50,7 +49,7 @@ local maxCount = {
     [8] = 6,
 }
 
--- Create a ScreenGui and TextLabel for displaying the messages
+-- Create a ScreenGui and TextLabel for displaying messages
 local gui = Instance.new("ScreenGui")
 local textLabel = Instance.new("TextLabel")
 local minimizeButton = Instance.new("TextButton")
@@ -151,6 +150,25 @@ end
 -- Connect minimize button click
 minimizeButton.MouseButton1Click:Connect(minimize)
 
+-- Function to determine the zone number based on pet score and shiny level
+local function getZoneNumber(score, shinyLevel)
+    if score >= 210 and shinyLevel >= 100 then
+        return 8
+    elseif score > 175 then
+        return 6
+    elseif score > 120 then
+        return 5
+    elseif score > 75 then
+        return 4
+    elseif score > 40 then
+        return 3
+    elseif score > 15 then
+        return 2
+    else
+        return 1
+    end
+end
+
 -- Toggle: Start/Stop Zone Check
 local ToggleZoneCheck = MainTab:CreateToggle({
     Name = "Auto Zone Check",
@@ -178,66 +196,37 @@ local ToggleZoneCheck = MainTab:CreateToggle({
     end,
 })
 
--- Create the toggle for hatching functionality
-local ToggleHatching = MainTab:CreateToggle({
-    Name = "Toggle Hatching",
+-- Toggle: Auto Fuse
+local ToggleAutoFuse = MainTab:CreateToggle({
+    Name = "Toggle Example (Auto Fuse)",
     CurrentValue = false,
-    Flag = "ToggleHatching", -- Unique flag for this toggle
+    Flag = "ToggleAutoFuse",
     Callback = function(Value)
-        hatchingEnabled = Value -- Update the hatchingEnabled variable based on the toggle's state
+        isRunning = Value
+        if Value then
+            coroutine.wrap(function()
+                while isRunning do
+                    local args = { [1] = { true, true, true, true, true, true, true, true } }
+                    game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer(unpack(args))
+                    wait(1)
+                end
+            end)()
+        end
     end,
 })
 
--- Main loop for hatching process, controlled by the toggle
-spawn(function() -- Spawn a new thread for the hatching logic
-    while true do
-        if hatchingEnabled then -- Only run the hatching script if the toggle is on
-            local lowestUndoneRarity = nil
+-- Toggle: Auto Jump
+local ToggleAutoJump = MainTab:CreateToggle({
+    Name = "Toggle Example (Auto Jump)",
+    CurrentValue = false,
+    Flag = "ToggleAutoJump",
+    Callback = function(Value)
+        isJumping = Value
+        if Value then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
 
-            -- Determine the lowest undone rarity
-            for rarity = 1, maxRarity do
-                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-
-                if discoveredCount < maxCount[rarity] then
-                    lowestUndoneRarity = rarity
-                    break -- Exit the loop once the lowest undone rarity is found
-                end
-            end
-
-            -- Print the checklist with rarity names and counts in the specified format
-            local outputMessages = {} -- Store messages for the GUI
-
-            for rarity = 1, maxRarity do
-                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-                local message = rarityNames[rarity] .. ": " .. discoveredCount
-
-                if rarity == lowestUndoneRarity then
-                    message = message .. " (currently hatching)"
-
-                    -- Fire the server to buy an egg for the lowest undone rarity
-                    local args = {
-                        [1] = rarity -- Use the rarity number
-                    }
-                    local success, errorMessage = pcall(function()
-                        game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))
-                    end)
-
-                    if not success then
-                        textLabel.Text = "Error: " .. errorMessage -- Update the GUI with the error message
-                    end
-                end
-
-                table.insert(outputMessages, message) -- Add message to the output list
-            end
-
-            -- Update the TextLabel with all messages
-            textLabel.Text = table.concat(outputMessages, "\n") -- Join messages with new lines
-        else
-            textLabel.Text = "Hatching is paused." -- Display a paused message when toggle is off
-        end
-
-        -- Wait for a brief moment before checking for updates
-        wait(1) -- Adjust the wait time as necessary
-    end
-end)
-
+            coroutine.wrap(function()
+                while isJumping do
+                    humanoid.Jump = true
+                    wait(0.1
