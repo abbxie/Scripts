@@ -56,7 +56,6 @@ local maxCount = {
 local gui = Instance.new("ScreenGui")
 local textLabel = Instance.new("TextLabel")
 local minimizeButton = Instance.new("TextButton")
-local resizeHandle = Instance.new("Frame")  -- Resize handle
 
 -- Set properties for the TextLabel
 textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
@@ -76,36 +75,21 @@ minimizeButton.Text = "Minimize"
 minimizeButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  -- Grey background
 minimizeButton.Parent = textLabel  -- Parent the button to the TextLabel
 
--- Set properties for the resize handle
-resizeHandle.Size = UDim2.new(0, 20, 0, 20)  -- Small square
-resizeHandle.Position = UDim2.new(1, -20, 1, -20)  -- Bottom right corner
-resizeHandle.BackgroundColor3 = Color3.new(0.7, 0.7, 0.7)  -- Light grey
-resizeHandle.Parent = textLabel  -- Parent the resize handle to the TextLabel
-
--- Variables for dragging and resizing
-local UserInputService = game:GetService("UserInputService")
+-- Variables for dragging
 local dragging = false
-local resizeDragging = false
 local dragStart = nil
 local startPos = nil
-local resizeStart = nil
-local startSize = nil
+local UserInputService = game:GetService("UserInputService")
 
 -- Function to update position during dragging
 local function update(input)
     if dragging then
         local delta = input.Position - dragStart
         textLabel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    elseif resizeDragging then
-        local delta = input.Position - resizeStart
-        local newWidth = math.clamp(startSize.X.Offset + delta.X, 100, 800)  -- Set min/max width
-        local newHeight = math.clamp(startSize.Y.Offset + delta.Y, 50, 600)  -- Set min/max height
-        textLabel.Size = UDim2.new(0, newWidth, 0, newHeight)
-        resizeHandle.Position = UDim2.new(1, -20, 1, -20)  -- Keep the resize handle in the bottom right
     end
 end
 
--- Function to start dragging the textLabel
+-- Function to start dragging
 textLabel.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -121,22 +105,6 @@ textLabel.InputBegan:Connect(function(input)
     end
 end)
 
--- Function to start resizing
-resizeHandle.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        resizeDragging = true
-        resizeStart = input.Position
-        startSize = textLabel.Size
-
-        -- Connect the end of resizing
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                resizeDragging = false
-            end
-        end)
-    end
-end)
-
 -- Update position on input change
 UserInputService.InputChanged:Connect(update)
 
@@ -147,6 +115,7 @@ local function minimize()
         textLabel.Text = ""  -- Clear text when minimized
     else
         textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Restore height
+        textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
     end
 end
 
