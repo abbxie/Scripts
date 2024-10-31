@@ -1,4 +1,5 @@
---Script:loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Collect%20all%20Pets-%20Auto%20merge'))() 
+-- Load necessary libraries and modules
+loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Collect%20all%20Pets-%20Auto%20merge'))()
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
@@ -7,25 +8,25 @@ local Window = Rayfield:CreateWindow({
    LoadingSubtitle = "by Sirius",
    ConfigurationSaving = {
       Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
+      FolderName = nil, -- Folder for saving config
       FileName = "Big Hub"
    }
 })
 
-local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+local MainTab = Window:CreateTab("Tab Example", 4483362458)
 local Section = MainTab:CreateSection("Section Example")
 
--- Variables for toggles
-local isRunning = false -- For Auto Fuse toggle
-local isJumping = false -- For Auto Jump toggle
+-- Define toggle states
+local isRunning = false
+local isJumping = false
+local isCheckingZone = false
+local hatchingEnabled = false
 
--- Variables for toggles
-local isCheckingZone = false -- For Zone Checking toggle
 local player = game:GetService("Players").LocalPlayer
 local petScore = player:WaitForChild("CurrentPetScore")
 local shinyScore = player:WaitForChild("ShinyScore")
 
--- Function to determine the zone number based on pet score and shiny level
+-- Define the function to determine zone based on score
 local function getZoneNumber(score, shinyLevel)
     if score >= 210 and shinyLevel >= 100 then
         return 8
@@ -44,7 +45,7 @@ local function getZoneNumber(score, shinyLevel)
     end
 end
 
--- Toggle: Start/Stop Zone Check
+-- Zone Checking Toggle
 local ToggleZoneCheck = MainTab:CreateToggle({
     Name = "Auto Zone Check",
     CurrentValue = false,
@@ -55,29 +56,18 @@ local ToggleZoneCheck = MainTab:CreateToggle({
             coroutine.wrap(function()
                 while isCheckingZone do
                     local zoneNumber = getZoneNumber(petScore.Value, shinyScore.Value)
-
-                    -- Fire the event if the player hasn't yet reached zone 8
-                    if zoneNumber == 8 then
-                        break  -- Exit the loop once zone 8 is reached
-                    else
-                        local args = {
-                            [1] = zoneNumber
-                        }
-                        game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(unpack(args))
-                    end
-
-                    wait(1)  -- Wait before checking again
+                    if zoneNumber == 8 then break end
+                    game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(zoneNumber)
+                    wait(1)
                 end
             end)()
         end
     end,
 })
 
-
-
--- Toggle 1: Auto Fuse
+-- Auto Fuse Toggle
 local Toggle1 = MainTab:CreateToggle({
-   Name = "Toggle Example (Auto Fuse)",
+   Name = "Auto Fuse",
    CurrentValue = false,
    Flag = "Toggle1",
    Callback = function(Value)
@@ -85,10 +75,7 @@ local Toggle1 = MainTab:CreateToggle({
       if Value then
          coroutine.wrap(function()
             while isRunning do
-               local args = {
-                   [1] = {true, true, true, true, true, true, true, true}
-               }
-               game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer(unpack(args))
+               game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer({true, true, true, true, true, true, true, true})
                wait(1)
             end
          end)()
@@ -96,21 +83,19 @@ local Toggle1 = MainTab:CreateToggle({
    end,
 })
 
--- Toggle 2: Auto Jump
+-- Auto Jump Toggle
 local Toggle2 = MainTab:CreateToggle({
-   Name = "Toggle Example (Auto Jump)",
+   Name = "Auto Jump",
    CurrentValue = false,
    Flag = "Toggle2",
    Callback = function(Value)
       isJumping = Value
       if Value then
-         local player = game.Players.LocalPlayer
-         local character = player.Character or player.CharacterAdded:Wait()
-         local humanoid = character:WaitForChild("Humanoid")
-         
          coroutine.wrap(function()
             while isJumping do
-               humanoid.Jump = true
+               local character = player.Character or player.CharacterAdded:Wait()
+               local humanoid = character:FindFirstChild("Humanoid")
+               if humanoid then humanoid.Jump = true end
                wait(0.1)
             end
          end)()
@@ -118,7 +103,7 @@ local Toggle2 = MainTab:CreateToggle({
    end,
 })
 
--- Buttons for loading scripts and actions
+-- Buttons to load scripts
 MainTab:CreateButton({
    Name = "Script 1",
    Callback = function()
@@ -133,221 +118,52 @@ MainTab:CreateButton({
    end,
 })
 
-MainTab:CreateButton({
-   Name = "Script 2",
-   Callback = function()
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
-   end,
-})
-
-MainTab:CreateButton({
-   Name = "Equip Best",
-   Callback = function()
-      game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
-   end,
-})
-
-MainTab:CreateButton({
-   Name = "Remote Spy",
-   Callback = function()
-      loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
-   end,
-})
-
-MainTab:CreateButton({
-   Name = "Remove Animations",
-   Callback = function()
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local lighting = game:GetService("Lighting")
-local player = game:GetService("Players").LocalPlayer
-local starterGui = game:GetService("StarterGui")
-
--- Move Lighting Blur to ReplicatedStorage
-if lighting:FindFirstChild("Blur") then
-    lighting.Blur.Parent = replicatedStorage
-end
-
--- Move PlayerGui Hatcher to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Hatcher") then
-    player.PlayerGui.ScreenGui.Hatcher.Parent = replicatedStorage
-end
-
--- Move PlayerGui AutoFuse to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse") then
-    player.PlayerGui.ScreenGui.AutoFuse.Parent = replicatedStorage
-end
-
--- Move StarterGui AutoFuse to ReplicatedStorage
-if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
-    starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
-end
-
--- Move LocalPlayer's AutoFuse to ReplicatedStorage
-if player:FindFirstChild("AutoFuse") then
-    player.AutoFuse.Parent = replicatedStorage
-end
-
--- Move AutoFuse under LocalPlayer.PlayerGui.ScreenGui.Main to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Main") and player.PlayerGui.ScreenGui.Main:FindFirstChild("AutoFuse") then
-    player.PlayerGui.ScreenGui.Main.AutoFuse.Parent = replicatedStorage
-end
-
--- Move Factory under LocalPlayer.PlayerGui.ScreenGui.Main to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Main") and player.PlayerGui.ScreenGui.Main:FindFirstChild("Factory") then
-    player.PlayerGui.ScreenGui.Main.Factory.Parent = replicatedStorage
-end
-   end,
-})
--- Toggle to control the hatching script
-local hatchingEnabled = false
-
--- Create the toggle for hatching functionality
-local Toggle6 = MainTab:CreateToggle({
+-- Toggle Hatching Process
+local ToggleHatching = MainTab:CreateToggle({
     Name = "Toggle Hatching",
     CurrentValue = false,
-    Flag = "ToggleHatching", -- Unique flag for this toggle
+    Flag = "ToggleHatching",
     Callback = function(Value)
-        hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
+        hatchingEnabled = Value
     end,
 })
 
-local player = game:GetService("Players").LocalPlayer
-local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist
-local maxRarity = 8  -- Maximum rarity number
+-- GUI for Hatching Information
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+local textLabel = Instance.new("TextLabel", gui)
+textLabel.Size = UDim2.new(0, 400, 0, 300)
+textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)
+textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
+textLabel.BackgroundTransparency = 0.5
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.TextScaled = true
 
-local rarityNames = {
-    [1] = "Common",
-    [2] = "Uncommon",
-    [3] = "Rare",
-    [4] = "Epic",
-    [5] = "Legendary",
-    [6] = "Prodigious",
-    [7] = "Ascended",
-    [8] = "Mythical"
-}
-
-local maxCount = {
-    [1] = 42,
-    [2] = 48,
-    [3] = 60,
-    [4] = 48,
-    [5] = 24,
-    [6] = 6,
-    [7] = 6,
-    [8] = 6,
-}
-
--- Create a ScreenGui and TextLabel for displaying the messages
-local gui = Instance.new("ScreenGui")
-local textLabel = Instance.new("TextLabel")
-local minimizeButton = Instance.new("TextButton")
-
--- Set properties for the TextLabel
-textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
-textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)  -- Centered on the screen
-textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Black background
-textLabel.BackgroundTransparency = 0.5  -- Semi-transparent
-textLabel.TextColor3 = Color3.new(1, 1, 1)  -- White text
-textLabel.TextScaled = true  -- Scale text to fit the label
-textLabel.Text = ""  -- Start with empty text
-textLabel.Parent = gui  -- Parent the TextLabel to the ScreenGui
-gui.Parent = player.PlayerGui  -- Parent the ScreenGui to the PlayerGui
-
--- Set properties for the minimize button
-minimizeButton.Size = UDim2.new(1, 0, 0, 25)  -- Full width, small height
-minimizeButton.Position = UDim2.new(0, 0, 1, 0)  -- Positioned below the TextLabel
-minimizeButton.Text = "Minimize"
-minimizeButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  -- Grey background
-minimizeButton.Parent = textLabel  -- Parent the button to the TextLabel
-
--- Variables for dragging
-local dragging = false
-local dragStart = nil
-local startPos = nil
-local UserInputService = game:GetService("UserInputService")
-
--- Function to update position during dragging
-local function update(input)
-    if dragging then
-        local delta = input.Position - dragStart
-        textLabel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end
-
--- Function to start dragging
-textLabel.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = textLabel.Position
-
-        -- Connect the end of dragging
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
+local function updateHatchingInfo()
+    if hatchingEnabled then
+        local checklist = player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui.Main:FindFirstChild("Left") and player.PlayerGui.ScreenGui.Main.Left:FindFirstChild("Checklist")
+        if checklist then
+            local outputMessages = {}
+            for rarity = 1, 8 do
+                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
+                local message = rarityNames[rarity] .. ": " .. discoveredCount
+                table.insert(outputMessages, message)
+                if rarity == lowestUndoneRarity then
+                    game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(rarity)
+                end
             end
-        end)
-    end
-end)
-
--- Update position on input change
-UserInputService.InputChanged:Connect(update)
-
--- Function to minimize or restore the GUI
-local function minimize()
-    if textLabel.Size == UDim2.new(0, 400, 0, 300) then
-        textLabel.Size = UDim2.new(0, 400, 0, 50)  -- Reduce height for minimization
-        textLabel.Text = ""  -- Clear text when minimized
-    else
-        textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Restore height
-        textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
-    end
-end
-
--- Connect minimize button click
-minimizeButton.MouseButton1Click:Connect(minimize)
-
--- Main loop for hatching process, controlled by the toggle
-while true do
-    if hatchingEnabled then  -- Only run the hatching script if the toggle is on
-        local lowestUndoneRarity = nil
-
-        -- Determine the lowest undone rarity
-        for rarity = 1, maxRarity do
-            local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-
-            if discoveredCount < maxCount[rarity] then
-                lowestUndoneRarity = rarity
-                break  -- Exit the loop once the lowest undone rarity is found
-            end
+            textLabel.Text = table.concat(outputMessages, "\n")
+        else
+            textLabel.Text = "Checklist not available."
         end
-
-        -- Print the checklist with rarity names and counts in the specified format
-        local outputMessages = {}  -- Store messages for the GUI
-
-        for rarity = 1, maxRarity do
-            local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-            local message = rarityNames[rarity] .. ": " .. discoveredCount
-
-            if rarity == lowestUndoneRarity then
-                message = message .. " (currently hatching)"
-
-                -- Fire the server to buy an egg for the lowest undone rarity
-                local args = {
-                    [1] = rarity  -- Use the rarity number
-                }
-                game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))
-            end
-
-            table.insert(outputMessages, message)  -- Add message to the output list
-        end
-
-        -- Update the TextLabel with all messages
-        textLabel.Text = table.concat(outputMessages, "\n")  -- Join messages with new lines
     else
-        textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
+        textLabel.Text = "Hatching is paused."
     end
-
-    -- Wait for a brief moment before checking for updates
-    wait(1)  -- Adjust the wait time as necessary
 end
+
+-- Loop to constantly update the hatching info if enabled
+coroutine.wrap(function()
+    while true do
+        updateHatchingInfo()
+        wait(1)
+    end
+end)()
