@@ -1,0 +1,113 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+   Name = "Rayfield Example Window",
+   LoadingTitle = "Rayfield Interface Suite",
+   LoadingSubtitle = "by Sirius",
+   ConfigurationSaving = {
+      Enabled = true,
+      FolderName = nil, -- Create a custom folder for your hub/game
+      FileName = "Big Hub"
+   }
+})
+
+local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+local Section = MainTab:CreateSection("Section Example")
+
+-- Toggle to control the hatching script
+local hatchingEnabled = false
+
+-- Create the toggle for hatching functionality
+local Toggle = MainTab:CreateToggle({
+   Name = "Toggle Hatching",
+   CurrentValue = false,
+   Flag = "ToggleHatching", -- Unique flag for this toggle
+   Callback = function(Value)
+       hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
+   end,
+})
+
+local player = game:GetService("Players").LocalPlayer
+local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist
+local maxRarity = 8  -- Maximum rarity number
+
+local rarityNames = {
+    [1] = "Common",
+    [2] = "Uncommon",
+    [3] = "Rare",
+    [4] = "Epic",
+    [5] = "Legendary",
+    [6] = "Prodigious",
+    [7] = "Ascended",
+    [8] = "Mythical"
+}
+
+local maxCount = {
+    [1] = 42,
+    [2] = 48,
+    [3] = 60,
+    [4] = 48,
+    [5] = 24,
+    [6] = 6,
+    [7] = 6,
+    [8] = 6,
+}
+
+-- Create a ScreenGui and TextLabel for displaying the messages
+local gui = Instance.new("ScreenGui")
+local textLabel = Instance.new("TextLabel")
+
+-- Set properties for the TextLabel
+textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
+textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)  -- Centered on the screen
+textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Black background
+textLabel.BackgroundTransparency = 0.5  -- Semi-transparent
+textLabel.TextColor3 = Color3.new(1, 1, 1)  -- White text
+textLabel.TextScaled = true  -- Scale text to fit the label
+textLabel.Text = ""  -- Start with empty text
+textLabel.Parent = gui  -- Parent the TextLabel to the ScreenGui
+gui.Parent = player.PlayerGui  -- Parent the ScreenGui to the PlayerGui
+
+-- Main loop for hatching process, controlled by the toggle
+while true do
+    if hatchingEnabled then  -- Only run the hatching script if the toggle is on
+        local lowestUndoneRarity = nil
+
+        -- Determine the lowest undone rarity
+        for rarity = 1, maxRarity do
+            local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
+
+            if discoveredCount < maxCount[rarity] then
+                lowestUndoneRarity = rarity
+                break  -- Exit the loop once the lowest undone rarity is found
+            end
+        end
+
+        -- Print the checklist with rarity names and counts in the specified format
+        local outputMessages = {}  -- Store messages for the GUI
+
+        for rarity = 1, maxRarity do
+            local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
+            local message = rarityNames[rarity] .. ": " .. discoveredCount
+
+            if rarity == lowestUndoneRarity then
+                message = message .. " (currently hatching)"
+
+                -- Fire the server to buy an egg for the lowest undone rarity
+                local args = {
+                    [1] = rarity  -- Use the rarity number
+                }
+                game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))
+            end
+
+            table.insert(outputMessages, message)  -- Add message to the output list
+        end
+
+        -- Update the TextLabel with all messages
+        textLabel.Text = table.concat(outputMessages, "\n")  -- Join messages with new lines
+    else
+        textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
+    end
+
+    -- Wait for a brief moment before checking for updates
+    wait(1)  -- Adjust the wait time as necessary
+end
