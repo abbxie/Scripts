@@ -1,29 +1,23 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-local Window = Rayfield:CreateWindow({
-    Name = "Rayfield Example Window",
-    LoadingTitle = "Rayfield Interface Suite",
-    LoadingSubtitle = "by Sirius",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil, -- Create a custom folder for your hub/game
-        FileName = "Big Hub"
-    }
-})
+local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
 
-local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
-local Section = MainTab:CreateSection("Section Example")
+local Window = OrionLib:MakeWindow({Name = "Title of the library", HidePremium = false, SaveConfig = true, ConfigFolder = "OrionTest"})
+
+local Tab = Window:MakeTab({
+    Name = "Tab 1",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
 -- Toggle to control the hatching script
 local hatchingEnabled = false
 
 -- Create the toggle for hatching functionality
-local Toggle = MainTab:CreateToggle({
+Tab:AddToggle({
     Name = "Toggle Hatching",
-    CurrentValue = false,
-    Flag = "ToggleHatching", -- Unique flag for this toggle
+    Default = false,
     Callback = function(Value)
         hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
-    end,
+    end    
 })
 
 local player = game:GetService("Players").LocalPlayer
