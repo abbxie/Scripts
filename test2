@@ -1,17 +1,194 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
+print("Rayfield loaded successfully")
+
 local Window = Rayfield:CreateWindow({
     Name = "Rayfield Example Window",
     LoadingTitle = "Rayfield Interface Suite",
     LoadingSubtitle = "by Sirius",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = nil, -- Create a custom folder for your hub/game
+        FolderName = nil, -- Specify a folder name if needed
         FileName = "Big Hub"
     }
 })
 
 local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Section Example")
+
+-- Variables for toggles
+local isRunning = false -- For Auto Fuse toggle
+local isJumping = false -- For Auto Jump toggle
+local isCheckingZone = false -- For Zone Checking toggle
+
+local player = game:GetService("Players").LocalPlayer
+local petScore = player:WaitForChild("CurrentPetScore")
+local shinyScore = player:WaitForChild("ShinyScore")
+
+-- Function to determine the zone number based on pet score and shiny level
+local function getZoneNumber(score, shinyLevel)
+    if score >= 210 and shinyLevel >= 100 then
+        return 8
+    elseif score > 175 then
+        return 6
+    elseif score > 120 then
+        return 5
+    elseif score > 75 then
+        return 4
+    elseif score > 40 then
+        return 3
+    elseif score > 15 then
+        return 2
+    else
+        return 1
+    end
+end
+
+-- Toggle: Start/Stop Zone Check
+local ToggleZoneCheck = MainTab:CreateToggle({
+    Name = "Auto Zone Check",
+    CurrentValue = false,
+    Flag = "ToggleZoneCheck",
+    Callback = function(Value)
+        isCheckingZone = Value
+        if Value then
+            coroutine.wrap(function()
+                while isCheckingZone do
+                    local zoneNumber = getZoneNumber(petScore.Value, shinyScore.Value)
+
+                    -- Fire the event if the player hasn't yet reached zone 8
+                    if zoneNumber == 8 then
+                        break  -- Exit the loop once zone 8 is reached
+                    else
+                        local args = { [1] = zoneNumber }
+                        game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(unpack(args))
+                    end
+
+                    wait(1)  -- Wait before checking again
+                end
+            end)()
+        end
+    end,
+})
+
+-- Toggle 1: Auto Fuse
+local Toggle1 = MainTab:CreateToggle({
+    Name = "Toggle Example (Auto Fuse)",
+    CurrentValue = false,
+    Flag = "Toggle1",
+    Callback = function(Value)
+        isRunning = Value
+        if Value then
+            coroutine.wrap(function()
+                while isRunning do
+                    local args = { [1] = {true, true, true, true, true, true, true, true} }
+                    game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer(unpack(args))
+                    wait(1)
+                end
+            end)()
+        end
+    end,
+})
+
+-- Toggle 2: Auto Jump
+local Toggle2 = MainTab:CreateToggle({
+    Name = "Toggle Example (Auto Jump)",
+    CurrentValue = false,
+    Flag = "Toggle2",
+    Callback = function(Value)
+        isJumping = Value
+        if Value then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+
+            coroutine.wrap(function()
+                while isJumping do
+                    humanoid.Jump = true
+                    wait(0.1)
+                end
+            end)()
+        end
+    end,
+})
+
+-- Buttons for loading scripts and actions
+MainTab:CreateButton({
+    Name = "Script 1",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Anti-AFK",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Script 2",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Equip Best",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Remote Spy",
+    Callback = function()
+        loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
+    end,
+})
+
+MainTab:CreateButton({
+    Name = "Remove Animations",
+    Callback = function()
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local lighting = game:GetService("Lighting")
+        local starterGui = game:GetService("StarterGui")
+
+        -- Move Lighting Blur to ReplicatedStorage
+        if lighting:FindFirstChild("Blur") then
+            lighting.Blur.Parent = replicatedStorage
+        end
+
+        -- Move PlayerGui elements to ReplicatedStorage
+        local playerGui = player:FindFirstChild("PlayerGui")
+        if playerGui and playerGui:FindFirstChild("ScreenGui") then
+            local screenGui = playerGui.ScreenGui
+            if screenGui:FindFirstChild("Hatcher") then
+                screenGui.Hatcher.Parent = replicatedStorage
+            end
+            if screenGui:FindFirstChild("AutoFuse") then
+                screenGui.AutoFuse.Parent = replicatedStorage
+            end
+            if screenGui:FindFirstChild("Main") then
+                if screenGui.Main:FindFirstChild("AutoFuse") then
+                    screenGui.Main.AutoFuse.Parent = replicatedStorage
+                end
+                if screenGui.Main:FindFirstChild("Factory") then
+                    screenGui.Main.Factory.Parent = replicatedStorage
+                end
+            end
+        end
+
+        -- Move StarterGui AutoFuse to ReplicatedStorage
+        if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
+            starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
+        end
+
+        -- Move LocalPlayer's AutoFuse to ReplicatedStorage
+        if player:FindFirstChild("AutoFuse") then
+            player.AutoFuse.Parent = replicatedStorage
+        end
+    end,
+})
 
 -- Toggle to control the hatching script
 local hatchingEnabled = false
