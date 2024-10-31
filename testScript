@@ -1,13 +1,13 @@
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-   Name = "Rayfield Example Window",
-   LoadingTitle = "Rayfield Interface Suite",
-   LoadingSubtitle = "by Sirius",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Big Hub"
-   }
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, -- Create a custom folder for your hub/game
+        FileName = "Big Hub"
+    }
 })
 
 local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
@@ -18,12 +18,12 @@ local hatchingEnabled = false
 
 -- Create the toggle for hatching functionality
 local Toggle = MainTab:CreateToggle({
-   Name = "Toggle Hatching",
-   CurrentValue = false,
-   Flag = "ToggleHatching", -- Unique flag for this toggle
-   Callback = function(Value)
-       hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
-   end,
+    Name = "Toggle Hatching",
+    CurrentValue = false,
+    Flag = "ToggleHatching", -- Unique flag for this toggle
+    Callback = function(Value)
+        hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
+    end,
 })
 
 local player = game:GetService("Players").LocalPlayer
@@ -55,6 +55,7 @@ local maxCount = {
 -- Create a ScreenGui and TextLabel for displaying the messages
 local gui = Instance.new("ScreenGui")
 local textLabel = Instance.new("TextLabel")
+local minimizeButton = Instance.new("TextButton")
 
 -- Set properties for the TextLabel
 textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
@@ -66,6 +67,59 @@ textLabel.TextScaled = true  -- Scale text to fit the label
 textLabel.Text = ""  -- Start with empty text
 textLabel.Parent = gui  -- Parent the TextLabel to the ScreenGui
 gui.Parent = player.PlayerGui  -- Parent the ScreenGui to the PlayerGui
+
+-- Set properties for the minimize button
+minimizeButton.Size = UDim2.new(1, 0, 0, 25)  -- Full width, small height
+minimizeButton.Position = UDim2.new(0, 0, 1, 0)  -- Positioned below the TextLabel
+minimizeButton.Text = "Minimize"
+minimizeButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  -- Grey background
+minimizeButton.Parent = textLabel  -- Parent the button to the TextLabel
+
+-- Variables for dragging
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+-- Function to update position during dragging
+local function update(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        textLabel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end
+
+-- Function to start dragging
+textLabel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = textLabel.Position
+
+        -- Connect the end of dragging
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+-- Update position on input change
+game:GetService("UserInputService").InputChanged:Connect(update)
+
+-- Function to minimize or restore the GUI
+local function minimize()
+    if textLabel.Size == UDim2.new(0, 400, 0, 300) then
+        textLabel.Size = UDim2.new(0, 400, 0, 50)  -- Reduce height for minimization
+        textLabel.Text = ""  -- Clear text when minimized
+    else
+        textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Restore height
+        -- No text is restored; it will display whatever is generated in the main loop.
+    end
+end
+
+-- Connect minimize button click
+minimizeButton.MouseButton1Click:Connect(minimize)
 
 -- Main loop for hatching process, controlled by the toggle
 while true do
