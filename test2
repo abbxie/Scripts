@@ -1,289 +1,148 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
+-- Load Rayfield library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() 
 print("Rayfield loaded successfully")
 
+-- Create Rayfield Window
 local Window = Rayfield:CreateWindow({
     Name = "Rayfield Example Window",
     LoadingTitle = "Rayfield Interface Suite",
     LoadingSubtitle = "by Sirius",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = nil, -- Specify a folder name if needed
+        FolderName = nil,
         FileName = "Big Hub"
     }
 })
 
-local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+local MainTab = Window:CreateTab("Tab Example", 4483362458)
 local Section = MainTab:CreateSection("Section Example")
 
--- Variables for toggles
-local isRunning = false -- For Auto Fuse toggle
-local isJumping = false -- For Auto Jump toggle
-local isCheckingZone = false -- For Zone Checking toggle
-local hatchingEnabled = false -- For Hatching toggle
-
+-- Variables
+local isRunning, isJumping, isCheckingZone, hatchingEnabled = false, false, false, false
 local player = game:GetService("Players").LocalPlayer
 local petScore = player:WaitForChild("CurrentPetScore")
 local shinyScore = player:WaitForChild("ShinyScore")
+local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist
+local maxRarity, rarityNames, maxCount = 8, { [1] = "Common", [2] = "Uncommon", [3] = "Rare", [4] = "Epic", [5] = "Legendary", [6] = "Prodigious", [7] = "Ascended", [8] = "Mythical" }, { [1] = 42, [2] = 48, [3] = 60, [4] = 48, [5] = 24, [6] = 6, [7] = 6, [8] = 6 }
 
--- Function to determine the zone number based on pet score and shiny level
-local function getZoneNumber(score, shinyLevel)
-    if score >= 210 and shinyLevel >= 100 then
-        return 8
-    elseif score > 175 then
-        return 6
-    elseif score > 120 then
-        return 5
-    elseif score > 75 then
-        return 4
-    elseif score > 40 then
-        return 3
-    elseif score > 15 then
-        return 2
-    else
-        return 1
+-- GUI for Displaying Messages
+local gui, textLabel, minimizeButton = Instance.new("ScreenGui"), Instance.new("TextLabel"), Instance.new("TextButton")
+textLabel.Size, textLabel.Position = UDim2.new(0, 400, 0, 300), UDim2.new(0.5, -200, 0.1, 0)
+textLabel.BackgroundColor3, textLabel.BackgroundTransparency, textLabel.TextColor3, textLabel.TextScaled, textLabel.Text, textLabel.Parent = Color3.new(0, 0, 0), 0.5, Color3.new(1, 1, 1), true, "", gui
+gui.Parent, minimizeButton.Size, minimizeButton.Position, minimizeButton.Text, minimizeButton.BackgroundColor3, minimizeButton.Parent = player.PlayerGui, UDim2.new(1, 0, 0, 25), UDim2.new(0, 0, 1, 0), "Minimize", Color3.new(0.5, 0.5, 0.5), textLabel
+
+-- Dragging Functionality
+local dragging, dragStart, startPos, UserInputService = false, nil, nil, game:GetService("UserInputService")
+local function update(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        textLabel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end
+textLabel.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging, dragStart, startPos = true, input.Position, textLabel.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
+        end)
+    end
+end)
+UserInputService.InputChanged:Connect(update)
 
--- Toggle: Start/Stop Zone Check
-local ToggleZoneCheck = MainTab:CreateToggle({
+-- Minimize/Restore GUI
+local function minimize()
+    if textLabel.Size == UDim2.new(0, 400, 0, 300) then textLabel.Size, textLabel.Text = UDim2.new(0, 400, 0, 50), "" 
+    else textLabel.Size = UDim2.new(0, 400, 0, 300) end
+end
+minimizeButton.MouseButton1Click:Connect(minimize)
+
+-- Determine Zone Based on Pet Score and Shiny Level
+local function getZoneNumber(score, shinyLevel)
+    if score >= 210 and shinyLevel >= 100 then return 8
+    elseif score > 175 then return 6
+    elseif score > 120 then return 5
+    elseif score > 75 then return 4
+    elseif score > 40 then return 3
+    elseif score > 15 then return 2
+    else return 1 end
+end
+
+-- Toggle for Zone Check
+MainTab:CreateToggle({
     Name = "Auto Zone Check",
     CurrentValue = false,
     Flag = "ToggleZoneCheck",
     Callback = function(Value)
         isCheckingZone = Value
-        if Value then
-            coroutine.wrap(function()
-                while isCheckingZone do
-                    local zoneNumber = getZoneNumber(petScore.Value, shinyScore.Value)
-
-                    -- Fire the event if the player hasn't yet reached zone 8
-                    if zoneNumber == 8 then
-                        break  -- Exit the loop once zone 8 is reached
-                    else
-                        local args = { [1] = zoneNumber }
-                        game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(unpack(args))
-                    end
-
-                    wait(1)  -- Wait before checking again
-                end
-            end)()
-        end
+        if Value then coroutine.wrap(function()
+            while isCheckingZone do
+                local zoneNumber = getZoneNumber(petScore.Value, shinyScore.Value)
+                if zoneNumber == 8 then break
+                else game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(zoneNumber) end
+                wait(1)
+            end
+        end)() end
     end,
 })
 
--- Toggle 1: Auto Fuse
-local Toggle1 = MainTab:CreateToggle({
-    Name = "Toggle Example (Auto Fuse)",
+-- Toggle for Auto Fuse
+MainTab:CreateToggle({
+    Name = "Auto Fuse",
     CurrentValue = false,
-    Flag = "Toggle1",
+    Flag = "ToggleAutoFuse",
     Callback = function(Value)
         isRunning = Value
-        if Value then
-            coroutine.wrap(function()
-                while isRunning do
-                    local args = { [1] = {true, true, true, true, true, true, true, true} }
-                    game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer(unpack(args))
-                    wait(1)
-                end
-            end)()
-        end
+        if Value then coroutine.wrap(function()
+            while isRunning do
+                game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer({ true, true, true, true, true, true, true, true })
+                wait(1)
+            end
+        end)() end
     end,
 })
 
--- Toggle 2: Auto Jump
-local Toggle2 = MainTab:CreateToggle({
-    Name = "Toggle Example (Auto Jump)",
+-- Toggle for Auto Jump
+MainTab:CreateToggle({
+    Name = "Auto Jump",
     CurrentValue = false,
-    Flag = "Toggle2",
+    Flag = "ToggleAutoJump",
     Callback = function(Value)
         isJumping = Value
-        if Value then
-            local character = player.Character or player.CharacterAdded:Wait()
-            local humanoid = character:WaitForChild("Humanoid")
-
-            coroutine.wrap(function()
-                while isJumping do
-                    humanoid.Jump = true
-                    wait(0.1)
-                end
-            end)()
-        end
+        if Value then coroutine.wrap(function()
+            while isJumping do
+                player.Character:WaitForChild("Humanoid").Jump = true
+                wait(0.1)
+            end
+        end)() end
     end,
 })
 
--- Toggle for hatching functionality
-local ToggleHatching = MainTab:CreateToggle({
+-- Toggle for Hatching
+MainTab:CreateToggle({
     Name = "Toggle Hatching",
     CurrentValue = false,
-    Flag = "ToggleHatching", -- Unique flag for this toggle
+    Flag = "ToggleHatching",
     Callback = function(Value)
-        hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
-        print("Hatching toggled to:", hatchingEnabled)  -- Confirm toggle status
-        if Value then
-            coroutine.wrap(function()
-                while hatchingEnabled do
-                    local lowestUndoneRarity = nil
+        hatchingEnabled = Value
+    end,
+})
 
-                    -- Check the checklist to find the lowest undone rarity
-                    for rarity = 1, 8 do
-                        local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-                        if discoveredCount < maxCount[rarity] then
-                            lowestUndoneRarity = rarity
-                            break
-                        end
-                    end
-
-                    -- If a rarity is found, hatch a pet for that rarity
-                    if lowestUndoneRarity then
-                        local args = {
-                            [1] = lowestUndoneRarity -- Use the rarity number
-                        }
-                        game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))
-                    end
-
-                    wait(1) -- Wait before hatching again
+-- Main Loop for Hatching
+spawn(function()
+    while true do
+        if hatchingEnabled then
+            local outputMessages = {}
+            for rarity = 1, maxRarity do
+                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
+                local message = rarityNames[rarity] .. ": " .. discoveredCount
+                if discoveredCount < maxCount[rarity] then
+                    game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(rarity)
+                    message = message .. " (currently hatching)"
                 end
-            end)()
-        end
-    end,
-})
-
--- Buttons for loading scripts and actions
-MainTab:CreateButton({
-    Name = "Script 1",
-    Callback = function()
-        loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
-    end,
-})
-
-MainTab:CreateButton({
-    Name = "Anti-AFK",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
-    end,
-})
-
-MainTab:CreateButton({
-    Name = "Script 2",
-    Callback = function()
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
-    end,
-})
-
-MainTab:CreateButton({
-    Name = "Equip Best",
-    Callback = function()
-        game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
-    end,
-})
-
-MainTab:CreateButton({
-    Name = "Remote Spy",
-    Callback = function()
-        loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
-    end,
-})
-
-MainTab:CreateButton({
-    Name = "Remove Animations",
-    Callback = function()
-        local replicatedStorage = game:GetService("ReplicatedStorage")
-        local lighting = game:GetService("Lighting")
-        local starterGui = game:GetService("StarterGui")
-
-        -- Move Lighting Blur to ReplicatedStorage
-        if lighting:FindFirstChild("Blur") then
-            lighting.Blur.Parent = replicatedStorage
-        end
-
-        -- Move PlayerGui elements to ReplicatedStorage
-        local playerGui = player:FindFirstChild("PlayerGui")
-        if playerGui and playerGui:FindFirstChild("ScreenGui") then
-            local screenGui = playerGui.ScreenGui
-            if screenGui:FindFirstChild("Hatcher") then
-                screenGui.Hatcher.Parent = replicatedStorage
+                table.insert(outputMessages, message)
             end
-            if screenGui:FindFirstChild("AutoFuse") then
-                screenGui.AutoFuse.Parent = replicatedStorage
-            end
-            if screenGui:FindFirstChild("Main") then
-                if screenGui.Main:FindFirstChild("AutoFuse") then
-                    screenGui.Main.AutoFuse.Parent = replicatedStorage
-                end
-                if screenGui.Main:FindFirstChild("Factory") then
-                    screenGui.Main.Factory.Parent = replicatedStorage
-                end
-            end
-        end
-
-        -- Move StarterGui AutoFuse to ReplicatedStorage
-        if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
-            starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
-        end
-
-        -- Move LocalPlayer's AutoFuse to ReplicatedStorage
-        if player:FindFirstChild("AutoFuse") then
-            player.AutoFuse.Parent = replicatedStorage
-        end
-    end,
-})
-
-local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist
-local maxRarity = 8  -- Maximum rarity number
-
-local rarityNames = {
-    [1] = "Common",
-    [2] = "Uncommon",
-    [3] = "Rare",
-    [4] = "Epic",
-    [5] = "Legendary",
-    [6] = "Prodigious",
-    [7] = "Ascended",
-    [8] = "Mythical"
-}
-
-local maxCount = {
-    [1] = 42,
-    [2] = 48,
-    [3] = 60,
-    [4] = 48,
-    [5] = 24,
-    [6] = 6,
-    [7] = 6,
-    [8] = 6,
-}
-
--- Create a ScreenGui and TextLabel for displaying the messages
-local gui = Instance.new("ScreenGui")
-local textLabel = Instance.new("TextLabel")
-local minimizeButton = Instance.new("TextButton")
-
--- Set properties for the TextLabel
-textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
-textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)  -- Centered on the screen
-textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Black background
-textLabel.TextColor3 = Color3.new(1, 1, 1)  -- White text
-textLabel.TextScaled = true
-textLabel.Text = "Welcome to the Game!"
-textLabel.Parent = gui
-
--- Set properties for the Minimize button
-minimizeButton.Size = UDim2.new(0, 100, 0, 50)
-minimizeButton.Position = UDim2.new(0.5, -50, 0.2, 0)  -- Positioned below the label
-minimizeButton.BackgroundColor3 = Color3.new(0, 0, 1)  -- Blue background
-minimizeButton.TextColor3 = Color3.new(1, 1, 1)  -- White text
-minimizeButton.Text = "Minimize"
-minimizeButton.Parent = gui
-
--- Function to minimize the GUI
-local function minimizeGUI()
-    gui.Enabled = not gui.Enabled
-end
-
--- Connect the button click to minimize the GUI
-minimizeButton.MouseButton1Click:Connect(minimizeGUI)
-
--- Finally, make sure the GUI is visible to the player
-gui.Parent = player.PlayerGui
-
-print("Script loaded successfully.")
+            textLabel.Text = table.concat(outputMessages, "\n")
+        else textLabel.Text = "Hatching is paused." end
+        wait(1)
+    end
+end)
