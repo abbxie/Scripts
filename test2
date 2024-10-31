@@ -24,6 +24,31 @@ local hatchingEnabled = false -- Toggle for hatching functionality
 local player = game:GetService("Players").LocalPlayer
 local petScore = player:WaitForChild("CurrentPetScore")
 local shinyScore = player:WaitForChild("ShinyScore")
+local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist -- Reference to the checklist
+
+local maxRarity = 8  -- Maximum rarity number
+
+local rarityNames = {
+    [1] = "Common",
+    [2] = "Uncommon",
+    [3] = "Rare",
+    [4] = "Epic",
+    [5] = "Legendary",
+    [6] = "Prodigious",
+    [7] = "Ascended",
+    [8] = "Mythical"
+}
+
+local maxCount = {
+    [1] = 42,
+    [2] = 48,
+    [3] = 60,
+    [4] = 48,
+    [5] = 24,
+    [6] = 6,
+    [7] = 6,
+    [8] = 6,
+}
 
 -- Function to determine the zone number based on pet score and shiny level
 local function getZoneNumber(score, shinyLevel)
@@ -105,6 +130,34 @@ local Toggle2 = MainTab:CreateToggle({
                 while isJumping do
                     humanoid.Jump = true
                     wait(0.1)
+                end
+            end)()
+        end
+    end,
+})
+
+-- Toggle to control the hatching script
+local ToggleHatching = MainTab:CreateToggle({
+    Name = "Toggle Hatching",
+    CurrentValue = false,
+    Flag = "ToggleHatching", -- Unique flag for this toggle
+    Callback = function(Value)
+        hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
+        if Value then
+            coroutine.wrap(function()
+                while hatchingEnabled do
+                    -- Check and hatch pets based on the checklist
+                    for rarity, count in pairs(maxCount) do
+                        if checklist:FindFirstChild(rarityNames[rarity]) then
+                            local petCount = checklist[rarityNames[rarity]].Count.Value -- Assuming there's a Count property
+                            if petCount < count then
+                                -- Call the server to hatch a pet
+                                game:GetService("ReplicatedStorage").Remotes.HatchPet:FireServer(rarity)
+                                break
+                            end
+                        end
+                    end
+                    wait(1) -- Wait before hatching again
                 end
             end)()
         end
@@ -200,21 +253,22 @@ local minimizeButton = Instance.new("TextButton")
 textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
 textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)  -- Centered on the screen
 textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Black background
-textLabel.BackgroundTransparency = 0.5  -- Semi-transparent
+textLabel.BackgroundTransparency = 0.5
 textLabel.TextColor3 = Color3.new(1, 1, 1)  -- White text
-textLabel.TextScaled = true  -- Scale text to fit the label
-textLabel.Text = ""  -- Start with empty text
-textLabel.Parent = gui  -- Parent the TextLabel to the ScreenGui
-gui.Parent = player.PlayerGui  -- Parent the ScreenGui to the PlayerGui
+textLabel.TextScaled = true
+textLabel.Text = "Welcome to the script!"  -- Initial text
+textLabel.Parent = gui
 
 -- Set properties for the minimize button
-minimizeButton.Size = UDim2.new(1, 0, 0, 25)  -- Full width, small height
-minimizeButton.Position = UDim2.new(0, 0, 1, 0)  -- Positioned below the TextLabel
+minimizeButton.Size = UDim2.new(0, 100, 0, 50)  -- Width, Height
+minimizeButton.Position = UDim2.new(0.5, -50, 0.5, 0)  -- Centered on the screen
 minimizeButton.Text = "Minimize"
-minimizeButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  -- Grey background
-minimizeButton.Parent = textLabel  -- Parent the button to the TextLabel
+minimizeButton.Parent = gui
 
--- Variables for dragging
+-- Make the GUI visible
+gui.Parent = player:WaitForChild("PlayerGui")
+
+-- Dragging functionality for the TextLabel
 local UserInputService = game:GetService("UserInputService")
 local dragging = false
 local dragStart = nil
