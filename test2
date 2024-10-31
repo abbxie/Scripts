@@ -189,17 +189,16 @@ MainTab:CreateButton({
         end
     end,
 })
--- Creating a new tab titled "Extra Tab" with an image ID
-local ExtraTab = Window:CreateTab("Extra Tab", 4483362458) -- Title, Image
 
--- Creating a new section under ExtraTab
-local ExtraSection = ExtraTab:CreateSection("Hatching Controls")
+-- Creating a new tab titled "Extra Tab" with an image ID
+local MainTab2 = Window:CreateTab("Extra Tab", 4483362458) -- Title, Image
+local Section2 = MainTab2:CreateSection("Hatching Controls")  -- Corrected the variable name
 
 -- Toggle to control the hatching script
 local hatchingEnabled = false
 
 -- Create the toggle for hatching functionality
-local Toggle = ExtraSection:CreateToggle({
+local Toggle = Section2:CreateToggle({
     Name = "Toggle Hatching",
     CurrentValue = false,
     Flag = "ToggleHatching", -- Unique flag for this toggle
@@ -208,7 +207,6 @@ local Toggle = ExtraSection:CreateToggle({
     end,
 })
 
-local player = game:GetService("Players").LocalPlayer
 local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist
 local maxRarity = 8  -- Maximum rarity number
 
@@ -246,107 +244,41 @@ textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Black background
 textLabel.BackgroundTransparency = 0.5  -- Semi-transparent
 textLabel.TextColor3 = Color3.new(1, 1, 1)  -- White text
 textLabel.TextScaled = true  -- Scale text to fit the label
-textLabel.Text = ""  -- Start with empty text
-textLabel.Parent = gui  -- Parent the TextLabel to the ScreenGui
-gui.Parent = player.PlayerGui  -- Parent the ScreenGui to the PlayerGui
+textLabel.TextWrapped = true  -- Wrap text to the next line
+textLabel.Text = "Hatching: OFF"  -- Initial text
+textLabel.Parent = gui  -- Parent to the ScreenGui
 
 -- Set properties for the minimize button
-minimizeButton.Size = UDim2.new(1, 0, 0, 25)  -- Full width, small height
-minimizeButton.Position = UDim2.new(0, 0, 1, 0)  -- Positioned below the TextLabel
+minimizeButton.Size = UDim2.new(0, 100, 0, 50)  -- Width, Height
+minimizeButton.Position = UDim2.new(0.5, -50, 0.9, 0)  -- Centered at the bottom
+minimizeButton.BackgroundColor3 = Color3.new(1, 0, 0)  -- Red background
+minimizeButton.TextColor3 = Color3.new(1, 1, 1)  -- White text
 minimizeButton.Text = "Minimize"
-minimizeButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  -- Grey background
-minimizeButton.Parent = textLabel  -- Parent the button to the TextLabel
+minimizeButton.Parent = gui  -- Parent to the ScreenGui
 
--- Variables for dragging
-local UserInputService = game:GetService("UserInputService")
-local dragging = false
-local dragStart = nil
-local startPos = nil
+-- Function to update the displayed message
+local function updateMessage()
+    local discoveredCount = 0
+    for rarity = 1, maxRarity do
+        local label = checklist[tostring(rarity)].DiscoveredLabel
+        discoveredCount = discoveredCount + tonumber(label.Text:match("%d+"))  -- Extract number from label
+    end
+    textLabel.Text = "Hatching: " .. (hatchingEnabled and "ON" or "OFF") .. "\nDiscovered: " .. discoveredCount .. "/" .. maxCount[1]  -- Update text with discovered count
+end
 
--- Function to update position during dragging
-local function update(input)
-    if dragging then
-        local delta = input.Position - dragStart
-        textLabel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+-- Connect the toggle callback to update the message
+Toggle.Callback = function(Value)
+    hatchingEnabled = Value
+    updateMessage()  -- Update message when toggle changes
+end
+
+-- Update the message every second while hatching is enabled
+while true do
+    wait(1)
+    if hatchingEnabled then
+        updateMessage()  -- Call updateMessage only if hatching is enabled
     end
 end
 
--- Function to start dragging the textLabel
-textLabel.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = textLabel.Position
-
-        -- Connect the end of dragging
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
--- Update position on input change
-UserInputService.InputChanged:Connect(update)
-
--- Function to minimize or restore the GUI
-local function minimize()
-    if textLabel.Size == UDim2.new(0, 400, 0, 300) then
-        textLabel.Size = UDim2.new(0, 400, 0, 50)  -- Reduce height for minimization
-        textLabel.Text = ""  -- Clear text when minimized
-    else
-        textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Restore height
-    end
-end
-
--- Connect minimize button click
-minimizeButton.MouseButton1Click:Connect(minimize)
-
--- Main loop for hatching process, controlled by the toggle
-spawn(function()  -- Spawn a new thread for the hatching logic
-    while true do
-        if hatchingEnabled then  -- Only run the hatching script if the toggle is on
-            local lowestUndoneRarity = nil
-
-            -- Determine the lowest undone rarity
-            for rarity = 1, maxRarity do
-                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-
-                if discoveredCount < maxCount[rarity] then
-                    lowestUndoneRarity = rarity
-                    break  -- Exit the loop once the lowest undone rarity is found
-                end
-            end
-
-            -- Print the checklist with rarity names and counts in the specified format
-            local outputMessages = {}  -- Store messages for the GUI
-
-            for rarity = 1, maxRarity do
-                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-                local message = rarityNames[rarity] .. ": " .. discoveredCount
-
-                if rarity == lowestUndoneRarity then
-                    message = message .. " (currently hatching)"
-
-                    -- Fire the server to buy an egg for the lowest undone rarity
-                    local args = {
-                        [1] = rarity  -- Use the rarity number
-                    }
-                    game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))
-                end
-
-                table.insert(outputMessages, message)  -- Add message to the output list
-            end
-
-            -- Update the TextLabel with all messages
-            textLabel.Text = table.concat(outputMessages, "\n")  -- Join messages with new lines
-        else
-            textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
-        end
-
-        -- Wait for a brief moment before checking for updates
-        wait(1)  -- Adjust the wait time as necessary
-    end
-end)
-
+-- Show the GUI
+gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
