@@ -87,6 +87,7 @@ MainTab:CreateToggle({
         end
     end,
 })
+
 -- Button for Script 1
 MainTab:CreateButton({
     Name = "Script 1",
