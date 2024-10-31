@@ -1,200 +1,117 @@
-Script:loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Collect%20all%20Pets-%20Auto%20merge'))() 
-
+-- Load necessary libraries and initialize Rayfield UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-   Name = "Rayfield Example Window",
-   LoadingTitle = "Rayfield Interface Suite",
-   LoadingSubtitle = "by Sirius",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil, -- Create a custom folder for your hub/game
-      FileName = "Big Hub"
-   }
-}) and this
-
-local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, -- Custom folder for hub/game
+        FileName = "Big Hub"
+    }
+})
+local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Tab Title and Image
 local Section = MainTab:CreateSection("Section Example")
 
--- Variables for toggles
-local isRunning = false -- For Auto Fuse toggle
-local isJumping = false -- For Auto Jump toggle
-
--- Variables for toggles
-local isCheckingZone = false -- For Zone Checking toggle
+local isRunning, isJumping, isCheckingZone = false, false, false
 local player = game:GetService("Players").LocalPlayer
-local petScore = player:WaitForChild("CurrentPetScore")
-local shinyScore = player:WaitForChild("ShinyScore")
 
--- Function to determine the zone number based on pet score and shiny level
-local function getZoneNumber(score, shinyLevel)
-    if score >= 210 and shinyLevel >= 100 then
-        return 8
-    elseif score > 175 then
-        return 6
-    elseif score > 120 then
-        return 5
-    elseif score > 75 then
-        return 4
-    elseif score > 40 then
-        return 3
-    elseif score > 15 then
-        return 2
-    else
-        return 1
-    end
-end
-
--- Toggle: Start/Stop Zone Check
-local ToggleZoneCheck = MainTab:CreateToggle({
-    Name = "Auto Zone Check",
+MainTab:CreateToggle({
+    Name = "Auto Fuse",
     CurrentValue = false,
-    Flag = "ToggleZoneCheck",
+    Flag = "Toggle1",
     Callback = function(Value)
-        isCheckingZone = Value
+        isRunning = Value
         if Value then
             coroutine.wrap(function()
-                while isCheckingZone do
-                    local zoneNumber = getZoneNumber(petScore.Value, shinyScore.Value)
-
-                    -- Fire the event if the player hasn't yet reached zone 8
-                    if zoneNumber == 8 then
-                        break  -- Exit the loop once zone 8 is reached
-                    else
-                        local args = {
-                            [1] = zoneNumber
-                        }
-                        game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(unpack(args))
-                    end
-
-                    wait(1)  -- Wait before checking again
+                while isRunning do
+                    game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer({true, true, true, true, true, true, true, true})
+                    wait(1)
                 end
             end)()
         end
     end,
 })
 
-
-
--- Toggle 1: Auto Fuse
-local Toggle1 = MainTab:CreateToggle({
-   Name = "Toggle Example (Auto Fuse)",
-   CurrentValue = false,
-   Flag = "Toggle1",
-   Callback = function(Value)
-      isRunning = Value
-      if Value then
-         coroutine.wrap(function()
-            while isRunning do
-               local args = {
-                   [1] = {true, true, true, true, true, true, true, true}
-               }
-               game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer(unpack(args))
-               wait(1)
-            end
-         end)()
-      end
-   end,
+-- Auto Jump toggle
+MainTab:CreateToggle({
+    Name = "Auto Jump",
+    CurrentValue = false,
+    Flag = "Toggle2",
+    Callback = function(Value)
+        isJumping = Value
+        if Value then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+            coroutine.wrap(function()
+                while isJumping do
+                    humanoid.Jump = true
+                    wait(0.1)
+                end
+            end)()
+        end
+    end,
 })
-
--- Toggle 2: Auto Jump
-local Toggle2 = MainTab:CreateToggle({
-   Name = "Toggle Example (Auto Jump)",
-   CurrentValue = false,
-   Flag = "Toggle2",
-   Callback = function(Value)
-      isJumping = Value
-      if Value then
-         local player = game.Players.LocalPlayer
-         local character = player.Character or player.CharacterAdded:Wait()
-         local humanoid = character:WaitForChild("Humanoid")
-         
-         coroutine.wrap(function()
-            while isJumping do
-               humanoid.Jump = true
-               wait(0.1)
-            end
-         end)()
-      end
-   end,
-})
-
--- Buttons for loading scripts and actions
+-- Button for Script 1
 MainTab:CreateButton({
-   Name = "Script 1",
-   Callback = function()
-      loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
-   end,
+    Name = "Script 1",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
+    end,
 })
 
+-- Anti-AFK Button
 MainTab:CreateButton({
-   Name = "Anti-AFK",
-   Callback = function()
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
-   end,
+    Name = "Anti-AFK",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
+    end,
 })
 
+-- Button for Script 2
 MainTab:CreateButton({
-   Name = "Script 2",
-   Callback = function()
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
-   end,
+    Name = "Script 2",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
+    end,
 })
 
+-- Equip Best Button
 MainTab:CreateButton({
-   Name = "Equip Best",
-   Callback = function()
-      game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
-   end,
+    Name = "Equip Best",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+    end,
 })
 
+-- Remote Spy Button
 MainTab:CreateButton({
-   Name = "Remote Spy",
-   Callback = function()
-      loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
-   end,
+    Name = "Remote Spy",
+    Callback = function()
+        loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
+    end,
 })
 
+-- Remove Animations Button
 MainTab:CreateButton({
-   Name = "Remove Animations",
-   Callback = function()
-local replicatedStorage = game:GetService("ReplicatedStorage")
-local lighting = game:GetService("Lighting")
-local player = game:GetService("Players").LocalPlayer
-local starterGui = game:GetService("StarterGui")
+    Name = "Remove Animations",
+    Callback = function()
+        local rs, lighting, player, starterGui = game:GetService("ReplicatedStorage"), game:GetService("Lighting"), player, game:GetService("StarterGui")
 
--- Move Lighting Blur to ReplicatedStorage
-if lighting:FindFirstChild("Blur") then
-    lighting.Blur.Parent = replicatedStorage
-end
+        -- Move various GUI elements to ReplicatedStorage to disable
+        local elementsToMove = {
+            lighting:FindFirstChild("Blur"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Hatcher"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse"),
+            starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse"),
+            player:FindFirstChild("AutoFuse"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui.Main:FindFirstChild("AutoFuse"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui.Main:FindFirstChild("Factory")
+        }
 
--- Move PlayerGui Hatcher to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Hatcher") then
-    player.PlayerGui.ScreenGui.Hatcher.Parent = replicatedStorage
-end
-
--- Move PlayerGui AutoFuse to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse") then
-    player.PlayerGui.ScreenGui.AutoFuse.Parent = replicatedStorage
-end
-
--- Move StarterGui AutoFuse to ReplicatedStorage
-if starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse") then
-    starterGui.ScreenGui.AutoFuse.Parent = replicatedStorage
-end
-
--- Move LocalPlayer's AutoFuse to ReplicatedStorage
-if player:FindFirstChild("AutoFuse") then
-    player.AutoFuse.Parent = replicatedStorage
-end
-
--- Move AutoFuse under LocalPlayer.PlayerGui.ScreenGui.Main to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Main") and player.PlayerGui.ScreenGui.Main:FindFirstChild("AutoFuse") then
-    player.PlayerGui.ScreenGui.Main.AutoFuse.Parent = replicatedStorage
-end
-
--- Move Factory under LocalPlayer.PlayerGui.ScreenGui.Main to ReplicatedStorage
-if player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Main") and player.PlayerGui.ScreenGui.Main:FindFirstChild("Factory") then
-    player.PlayerGui.ScreenGui.Main.Factory.Parent = replicatedStorage
-end
-   end,
-})
+        -- Move each element to ReplicatedStorage if it exists
+        for _, element in ipairs(elementsToMove) do
+            if element then element.Parent = rs end
+        end
+    end,
+}
