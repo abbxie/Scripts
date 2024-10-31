@@ -56,6 +56,7 @@ local maxCount = {
 local gui = Instance.new("ScreenGui")
 local textLabel = Instance.new("TextLabel")
 local minimizeButton = Instance.new("TextButton")
+local resizeHandle = Instance.new("Frame")  -- Resize handle
 
 -- Set properties for the TextLabel
 textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
@@ -75,21 +76,36 @@ minimizeButton.Text = "Minimize"
 minimizeButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  -- Grey background
 minimizeButton.Parent = textLabel  -- Parent the button to the TextLabel
 
--- Variables for dragging
+-- Set properties for the resize handle
+resizeHandle.Size = UDim2.new(0, 20, 0, 20)  -- Small square
+resizeHandle.Position = UDim2.new(1, -20, 1, -20)  -- Bottom right corner
+resizeHandle.BackgroundColor3 = Color3.new(0.7, 0.7, 0.7)  -- Light grey
+resizeHandle.Parent = textLabel  -- Parent the resize handle to the TextLabel
+
+-- Variables for dragging and resizing
+local UserInputService = game:GetService("UserInputService")
 local dragging = false
+local resizeDragging = false
 local dragStart = nil
 local startPos = nil
-local UserInputService = game:GetService("UserInputService")
+local resizeStart = nil
+local startSize = nil
 
 -- Function to update position during dragging
 local function update(input)
     if dragging then
         local delta = input.Position - dragStart
         textLabel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    elseif resizeDragging then
+        local delta = input.Position - resizeStart
+        local newWidth = math.clamp(startSize.X.Offset + delta.X, 100, 800)  -- Set min/max width
+        local newHeight = math.clamp(startSize.Y.Offset + delta.Y, 50, 600)  -- Set min/max height
+        textLabel.Size = UDim2.new(0, newWidth, 0, newHeight)
+        resizeHandle.Position = UDim2.new(1, -20, 1, -20)  -- Keep the resize handle in the bottom right
     end
 end
 
--- Function to start dragging
+-- Function to start dragging the textLabel
 textLabel.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -105,6 +121,22 @@ textLabel.InputBegan:Connect(function(input)
     end
 end)
 
+-- Function to start resizing
+resizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        resizeDragging = true
+        resizeStart = input.Position
+        startSize = textLabel.Size
+
+        -- Connect the end of resizing
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                resizeDragging = false
+            end
+        end)
+    end
+end)
+
 -- Update position on input change
 UserInputService.InputChanged:Connect(update)
 
@@ -115,7 +147,6 @@ local function minimize()
         textLabel.Text = ""  -- Clear text when minimized
     else
         textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Restore height
-        textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
     end
 end
 
@@ -123,46 +154,48 @@ end
 minimizeButton.MouseButton1Click:Connect(minimize)
 
 -- Main loop for hatching process, controlled by the toggle
-while true do
-    if hatchingEnabled then  -- Only run the hatching script if the toggle is on
-        local lowestUndoneRarity = nil
+spawn(function()  -- Spawn a new thread for the hatching logic
+    while true do
+        if hatchingEnabled then  -- Only run the hatching script if the toggle is on
+            local lowestUndoneRarity = nil
 
-        -- Determine the lowest undone rarity
-        for rarity = 1, maxRarity do
-            local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
+            -- Determine the lowest undone rarity
+            for rarity = 1, maxRarity do
+                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
 
-            if discoveredCount < maxCount[rarity] then
-                lowestUndoneRarity = rarity
-                break  -- Exit the loop once the lowest undone rarity is found
-            end
-        end
-
-        -- Print the checklist with rarity names and counts in the specified format
-        local outputMessages = {}  -- Store messages for the GUI
-
-        for rarity = 1, maxRarity do
-            local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-            local message = rarityNames[rarity] .. ": " .. discoveredCount
-
-            if rarity == lowestUndoneRarity then
-                message = message .. " (currently hatching)"
-
-                -- Fire the server to buy an egg for the lowest undone rarity
-                local args = {
-                    [1] = rarity  -- Use the rarity number
-                }
-                game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))
+                if discoveredCount < maxCount[rarity] then
+                    lowestUndoneRarity = rarity
+                    break  -- Exit the loop once the lowest undone rarity is found
+                end
             end
 
-            table.insert(outputMessages, message)  -- Add message to the output list
+            -- Print the checklist with rarity names and counts in the specified format
+            local outputMessages = {}  -- Store messages for the GUI
+
+            for rarity = 1, maxRarity do
+                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
+                local message = rarityNames[rarity] .. ": " .. discoveredCount
+
+                if rarity == lowestUndoneRarity then
+                    message = message .. " (currently hatching)"
+
+                    -- Fire the server to buy an egg for the lowest undone rarity
+                    local args = {
+                        [1] = rarity  -- Use the rarity number
+                    }
+                    game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))
+                end
+
+                table.insert(outputMessages, message)  -- Add message to the output list
+            end
+
+            -- Update the TextLabel with all messages
+            textLabel.Text = table.concat(outputMessages, "\n")  -- Join messages with new lines
+        else
+            textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
         end
 
-        -- Update the TextLabel with all messages
-        textLabel.Text = table.concat(outputMessages, "\n")  -- Join messages with new lines
-    else
-        textLabel.Text = "Hatching is paused."  -- Display a paused message when toggle is off
+        -- Wait for a brief moment before checking for updates
+        wait(1)  -- Adjust the wait time as necessary
     end
-
-    -- Wait for a brief moment before checking for updates
-    wait(1)  -- Adjust the wait time as necessary
-end
+end)
