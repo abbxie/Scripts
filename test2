@@ -12,8 +12,6 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
-print("Window created successfully")
-
 local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Section Example")
 
