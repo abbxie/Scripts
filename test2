@@ -190,36 +190,28 @@ MainTab:CreateButton({
     end,
 })
 
--- Creating a new tab titled "Extra Tab" with an image ID
-local MainTab2 = Window:CreateTab("Extra Tab", 4483362458) -- Title, Image
-local Section2 = MainTab2:CreateSection("Hatching Controls")  -- Corrected the variable name
+-- Creating a new tab titled "Hatching Controls" for the hatching functionality
+local HatchingTab = Window:CreateTab("Hatching Controls", 4483362458) -- Title, Image
+local HatchingSection = HatchingTab:CreateSection("Hatching Options")
 
--- Toggle to control the hatching script
+-- Variables for hatching toggle
 local hatchingEnabled = false
 
 -- Create the toggle for hatching functionality
-local Toggle = Section2:CreateToggle({
+local ToggleHatch = HatchingSection:CreateToggle({
     Name = "Toggle Hatching",
     CurrentValue = false,
     Flag = "ToggleHatching", -- Unique flag for this toggle
     Callback = function(Value)
         hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
+        if hatchingEnabled then
+            toggleHatching()  -- Start hatching when enabled
+        end
     end,
 })
 
 local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist
 local maxRarity = 8  -- Maximum rarity number
-
-local rarityNames = {
-    [1] = "Common",
-    [2] = "Uncommon",
-    [3] = "Rare",
-    [4] = "Epic",
-    [5] = "Legendary",
-    [6] = "Prodigious",
-    [7] = "Ascended",
-    [8] = "Mythical"
-}
 
 local maxCount = {
     [1] = 42,
@@ -238,7 +230,7 @@ local textLabel = Instance.new("TextLabel")
 local minimizeButton = Instance.new("TextButton")
 
 -- Set properties for the TextLabel
-textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Width, Height
+textLabel.Size = UDim2.new(0, 400, 0, 100)  -- Width, Height
 textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)  -- Centered on the screen
 textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Black background
 textLabel.BackgroundTransparency = 0.5  -- Semi-transparent
