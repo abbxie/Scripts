@@ -1,4 +1,4 @@
-Script:loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Collect%20all%20Pets-%20Auto%20merge'))() 
+--Script:loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Collect%20all%20Pets-%20Auto%20merge'))() 
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
