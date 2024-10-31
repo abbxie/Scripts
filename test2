@@ -189,14 +189,17 @@ MainTab:CreateButton({
         end
     end,
 })
+-- Creating a new tab titled "Extra Tab" with an image ID
 local ExtraTab = Window:CreateTab("Extra Tab", 4483362458) -- Title, Image
-local ExtraSection = ExtraTab:CreateSection("Extra Section")
+
+-- Creating a new section under ExtraTab
+local ExtraSection = ExtraTab:CreateSection("Hatching Controls")
 
 -- Toggle to control the hatching script
 local hatchingEnabled = false
 
 -- Create the toggle for hatching functionality
-local Toggle = ExtraTab:CreateToggle({
+local Toggle = ExtraSection:CreateToggle({
     Name = "Toggle Hatching",
     CurrentValue = false,
     Flag = "ToggleHatching", -- Unique flag for this toggle
@@ -346,3 +349,4 @@ spawn(function()  -- Spawn a new thread for the hatching logic
         wait(1)  -- Adjust the wait time as necessary
     end
 end)
+
