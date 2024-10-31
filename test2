@@ -250,35 +250,48 @@ textLabel.Parent = gui  -- Parent to the ScreenGui
 
 -- Set properties for the minimize button
 minimizeButton.Size = UDim2.new(0, 100, 0, 50)  -- Width, Height
-minimizeButton.Position = UDim2.new(0.5, -50, 0.9, 0)  -- Centered at the bottom
-minimizeButton.BackgroundColor3 = Color3.new(1, 0, 0)  -- Red background
-minimizeButton.TextColor3 = Color3.new(1, 1, 1)  -- White text
-minimizeButton.Text = "Minimize"
+minimizeButton.Position = UDim2.new(0.5, -50, 0.9, 0)  -- Centered on the screen
+minimizeButton.Text = "Minimize"  -- Button text
 minimizeButton.Parent = gui  -- Parent to the ScreenGui
 
--- Function to update the displayed message
-local function updateMessage()
-    local discoveredCount = 0
-    for rarity = 1, maxRarity do
-        local label = checklist[tostring(rarity)].DiscoveredLabel
-        discoveredCount = discoveredCount + tonumber(label.Text:match("%d+"))  -- Extract number from label
-    end
-    textLabel.Text = "Hatching: " .. (hatchingEnabled and "ON" or "OFF") .. "\nDiscovered: " .. discoveredCount .. "/" .. maxCount[1]  -- Update text with discovered count
-end
-
--- Connect the toggle callback to update the message
-Toggle.Callback = function(Value)
-    hatchingEnabled = Value
-    updateMessage()  -- Update message when toggle changes
-end
-
--- Update the message every second while hatching is enabled
-while true do
-    wait(1)
+-- Function to toggle hatching
+local function toggleHatching()
     if hatchingEnabled then
-        updateMessage()  -- Call updateMessage only if hatching is enabled
+        textLabel.Text = "Hatching: ON"  -- Update the text to reflect hatching state
+        while hatchingEnabled do
+            for rarity = 1, maxRarity do
+                local collected = checklist[tostring(rarity)].DiscoveredLabel.Text
+                local currentCount = tonumber(collected:match("%d+")) or 0  -- Extract the number from the text
+
+                -- Check if the player can hatch more pets of this rarity
+                if currentCount < maxCount[rarity] then
+                    local args = { [1] = rarity }  -- Create args for hatching
+                    game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(unpack(args))  -- Call the hatching function
+                    wait(0.1)  -- Short delay before hatching next pet
+                end
+            end
+            wait(1)  -- Wait before repeating the cycle
+        end
+    else
+        textLabel.Text = "Hatching: OFF"  -- Update the text to reflect hatching state
     end
 end
 
--- Show the GUI
-gui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Minimize button functionality
+minimizeButton.MouseButton1Click:Connect(function()
+    gui.Enabled = not gui.Enabled  -- Toggle the visibility of the GUI
+    minimizeButton.Text = gui.Enabled and "Minimize" or "Maximize"  -- Update button text
+end)
+
+-- Function to check and update hatching state
+local function checkHatching()
+    while true do
+        toggleHatching()
+        wait(0.1)  -- Short wait to prevent high CPU usage
+    end
+end
+
+-- Start the hatching check in a coroutine
+coroutine.wrap(checkHatching)()
+
+gui.Parent = game.Players.LocalPlayer.PlayerGui  -- Set the ScreenGui to the PlayerGui
