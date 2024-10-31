@@ -206,6 +206,8 @@ local ToggleHatch = HatchingSection:CreateToggle({
         hatchingEnabled = Value  -- Update the hatchingEnabled variable based on the toggle's state
         if hatchingEnabled then
             toggleHatching()  -- Start hatching when enabled
+        else
+            textLabel.Text = "Hatching: OFF"  -- Update the text to reflect hatching state
         end
     end,
 })
@@ -223,28 +225,6 @@ local maxCount = {
     [7] = 6,
     [8] = 6,
 }
-
--- Create a ScreenGui and TextLabel for displaying the messages
-local gui = Instance.new("ScreenGui")
-local textLabel = Instance.new("TextLabel")
-local minimizeButton = Instance.new("TextButton")
-
--- Set properties for the TextLabel
-textLabel.Size = UDim2.new(0, 400, 0, 100)  -- Width, Height
-textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)  -- Centered on the screen
-textLabel.BackgroundColor3 = Color3.new(0, 0, 0)  -- Black background
-textLabel.BackgroundTransparency = 0.5  -- Semi-transparent
-textLabel.TextColor3 = Color3.new(1, 1, 1)  -- White text
-textLabel.TextScaled = true  -- Scale text to fit the label
-textLabel.TextWrapped = true  -- Wrap text to the next line
-textLabel.Text = "Hatching: OFF"  -- Initial text
-textLabel.Parent = gui  -- Parent to the ScreenGui
-
--- Set properties for the minimize button
-minimizeButton.Size = UDim2.new(0, 100, 0, 50)  -- Width, Height
-minimizeButton.Position = UDim2.new(0.5, -50, 0.9, 0)  -- Centered on the screen
-minimizeButton.Text = "Minimize"  -- Button text
-minimizeButton.Parent = gui  -- Parent to the ScreenGui
 
 -- Function to toggle hatching
 local function toggleHatching()
@@ -264,10 +244,27 @@ local function toggleHatching()
             end
             wait(1)  -- Wait before repeating the cycle
         end
-    else
-        textLabel.Text = "Hatching: OFF"  -- Update the text to reflect hatching state
     end
 end
+
+-- Create a ScreenGui and TextLabel for displaying the messages
+local gui = Instance.new("ScreenGui")
+local textLabel = Instance.new("TextLabel")
+local minimizeButton = Instance.new("TextButton")
+
+-- Set properties for the TextLabel
+textLabel.Size = UDim2.new(0, 400, 0, 100)  -- Adjust size as needed
+textLabel.Position = UDim2.new(0.5, -200, 0.5, -50)  -- Center it on the screen
+textLabel.Text = "Hatching: OFF"
+textLabel.TextColor3 = Color3.new(1, 1, 1)
+textLabel.BackgroundTransparency = 1
+textLabel.Parent = gui
+
+-- Set properties for the Minimize Button
+minimizeButton.Size = UDim2.new(0, 100, 0, 50)  -- Adjust size as needed
+minimizeButton.Position = UDim2.new(0.5, -50, 0.5, 50)  -- Position below the TextLabel
+minimizeButton.Text = "Minimize"
+minimizeButton.Parent = gui
 
 -- Minimize button functionality
 minimizeButton.MouseButton1Click:Connect(function()
@@ -275,15 +272,7 @@ minimizeButton.MouseButton1Click:Connect(function()
     minimizeButton.Text = gui.Enabled and "Minimize" or "Maximize"  -- Update button text
 end)
 
--- Function to check and update hatching state
-local function checkHatching()
-    while true do
-        toggleHatching()
-        wait(0.1)  -- Short wait to prevent high CPU usage
-    end
-end
-
 -- Start the hatching check in a coroutine
-coroutine.wrap(checkHatching)()
+coroutine.wrap(toggleHatching)()
 
-gui.Parent = game.Players.LocalPlayer.PlayerGui  -- Set the ScreenGui to the PlayerGui
+gui.Parent = player.PlayerGui  -- Set the ScreenGui to the PlayerGui
