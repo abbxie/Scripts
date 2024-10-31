@@ -1,51 +1,36 @@
--- Load necessary libraries and modules
-loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Collect%20all%20Pets-%20Auto%20merge'))()
-
+-- Load necessary libraries and initialize Rayfield UI
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-   Name = "Rayfield Example Window",
-   LoadingTitle = "Rayfield Interface Suite",
-   LoadingSubtitle = "by Sirius",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = nil, -- Folder for saving config
-      FileName = "Big Hub"
-   }
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, -- Custom folder for hub/game
+        FileName = "Big Hub"
+    }
 })
-
-local MainTab = Window:CreateTab("Tab Example", 4483362458)
+local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Tab Title and Image
 local Section = MainTab:CreateSection("Section Example")
 
--- Define toggle states
-local isRunning = false
-local isJumping = false
-local isCheckingZone = false
-local hatchingEnabled = false
-
+-- Variables for toggles
+local isRunning, isJumping, isCheckingZone = false, false, false
 local player = game:GetService("Players").LocalPlayer
 local petScore = player:WaitForChild("CurrentPetScore")
 local shinyScore = player:WaitForChild("ShinyScore")
 
--- Define the function to determine zone based on score
+-- Zone determination based on score and shiny level
 local function getZoneNumber(score, shinyLevel)
-    if score >= 210 and shinyLevel >= 100 then
-        return 8
-    elseif score > 175 then
-        return 6
-    elseif score > 120 then
-        return 5
-    elseif score > 75 then
-        return 4
-    elseif score > 40 then
-        return 3
-    elseif score > 15 then
-        return 2
-    else
-        return 1
-    end
+    if score >= 210 and shinyLevel >= 100 then return 8
+    elseif score > 175 then return 6
+    elseif score > 120 then return 5
+    elseif score > 75 then return 4
+    elseif score > 40 then return 3
+    elseif score > 15 then return 2
+    else return 1 end
 end
 
--- Zone Checking Toggle
+-- Auto Zone Check toggle
 local ToggleZoneCheck = MainTab:CreateToggle({
     Name = "Auto Zone Check",
     CurrentValue = false,
@@ -65,105 +50,103 @@ local ToggleZoneCheck = MainTab:CreateToggle({
     end,
 })
 
--- Auto Fuse Toggle
-local Toggle1 = MainTab:CreateToggle({
-   Name = "Auto Fuse",
-   CurrentValue = false,
-   Flag = "Toggle1",
-   Callback = function(Value)
-      isRunning = Value
-      if Value then
-         coroutine.wrap(function()
-            while isRunning do
-               game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer({true, true, true, true, true, true, true, true})
-               wait(1)
-            end
-         end)()
-      end
-   end,
-})
-
--- Auto Jump Toggle
-local Toggle2 = MainTab:CreateToggle({
-   Name = "Auto Jump",
-   CurrentValue = false,
-   Flag = "Toggle2",
-   Callback = function(Value)
-      isJumping = Value
-      if Value then
-         coroutine.wrap(function()
-            while isJumping do
-               local character = player.Character or player.CharacterAdded:Wait()
-               local humanoid = character:FindFirstChild("Humanoid")
-               if humanoid then humanoid.Jump = true end
-               wait(0.1)
-            end
-         end)()
-      end
-   end,
-})
-
--- Buttons to load scripts
-MainTab:CreateButton({
-   Name = "Script 1",
-   Callback = function()
-      loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
-   end,
-})
-
-MainTab:CreateButton({
-   Name = "Anti-AFK",
-   Callback = function()
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
-   end,
-})
-
--- Toggle Hatching Process
-local ToggleHatching = MainTab:CreateToggle({
-    Name = "Toggle Hatching",
+-- Auto Fuse toggle
+MainTab:CreateToggle({
+    Name = "Auto Fuse",
     CurrentValue = false,
-    Flag = "ToggleHatching",
+    Flag = "Toggle1",
     Callback = function(Value)
-        hatchingEnabled = Value
+        isRunning = Value
+        if Value then
+            coroutine.wrap(function()
+                while isRunning do
+                    game:GetService("ReplicatedStorage").Remotes.AutoFuse:FireServer({true, true, true, true, true, true, true, true})
+                    wait(1)
+                end
+            end)()
+        end
     end,
 })
 
--- GUI for Hatching Information
-local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-local textLabel = Instance.new("TextLabel", gui)
-textLabel.Size = UDim2.new(0, 400, 0, 300)
-textLabel.Position = UDim2.new(0.5, -200, 0.1, 0)
-textLabel.BackgroundColor3 = Color3.new(0, 0, 0)
-textLabel.BackgroundTransparency = 0.5
-textLabel.TextColor3 = Color3.new(1, 1, 1)
-textLabel.TextScaled = true
-
-local function updateHatchingInfo()
-    if hatchingEnabled then
-        local checklist = player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui.Main:FindFirstChild("Left") and player.PlayerGui.ScreenGui.Main.Left:FindFirstChild("Checklist")
-        if checklist then
-            local outputMessages = {}
-            for rarity = 1, 8 do
-                local discoveredCount = tonumber(checklist[tostring(rarity)].DiscoveredLabel.Text:match("(%d+)")) or 0
-                local message = rarityNames[rarity] .. ": " .. discoveredCount
-                table.insert(outputMessages, message)
-                if rarity == lowestUndoneRarity then
-                    game:GetService("ReplicatedStorage").Remotes.BuyEgg:FireServer(rarity)
+-- Auto Jump toggle
+MainTab:CreateToggle({
+    Name = "Auto Jump",
+    CurrentValue = false,
+    Flag = "Toggle2",
+    Callback = function(Value)
+        isJumping = Value
+        if Value then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local humanoid = character:WaitForChild("Humanoid")
+            coroutine.wrap(function()
+                while isJumping do
+                    humanoid.Jump = true
+                    wait(0.1)
                 end
-            end
-            textLabel.Text = table.concat(outputMessages, "\n")
-        else
-            textLabel.Text = "Checklist not available."
+            end)()
         end
-    else
-        textLabel.Text = "Hatching is paused."
-    end
-end
+    end,
+})
+-- Button for Script 1
+MainTab:CreateButton({
+    Name = "Script 1",
+    Callback = function()
+        loadstring(game:HttpGet('https://raw.githubusercontent.com/AliCode14/scripts/main/ScriptHub.lua'))()
+    end,
+})
 
--- Loop to constantly update the hatching info if enabled
-coroutine.wrap(function()
-    while true do
-        updateHatchingInfo()
-        wait(1)
-    end
-end)()
+-- Anti-AFK Button
+MainTab:CreateButton({
+    Name = "Anti-AFK",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Antiafk"))()
+    end,
+})
+
+-- Button for Script 2
+MainTab:CreateButton({
+    Name = "Script 2",
+    Callback = function()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/CasperFlyModz/discord.gg-rips/main/CollectAllPets.lua"))()
+    end,
+})
+
+-- Equip Best Button
+MainTab:CreateButton({
+    Name = "Equip Best",
+    Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+    end,
+})
+
+-- Remote Spy Button
+MainTab:CreateButton({
+    Name = "Remote Spy",
+    Callback = function()
+        loadstring(game:HttpGet("https://github.com/exxtremestuffs/SimpleSpySource/raw/master/SimpleSpy.lua"))()
+    end,
+})
+
+-- Remove Animations Button
+MainTab:CreateButton({
+    Name = "Remove Animations",
+    Callback = function()
+        local rs, lighting, player, starterGui = game:GetService("ReplicatedStorage"), game:GetService("Lighting"), player, game:GetService("StarterGui")
+
+        -- Move various GUI elements to ReplicatedStorage to disable
+        local elementsToMove = {
+            lighting:FindFirstChild("Blur"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("Hatcher"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui:FindFirstChild("AutoFuse"),
+            starterGui:FindFirstChild("ScreenGui") and starterGui.ScreenGui:FindFirstChild("AutoFuse"),
+            player:FindFirstChild("AutoFuse"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui.Main:FindFirstChild("AutoFuse"),
+            player:FindFirstChild("PlayerGui") and player.PlayerGui:FindFirstChild("ScreenGui") and player.PlayerGui.ScreenGui.Main:FindFirstChild("Factory")
+        }
+
+        -- Move each element to ReplicatedStorage if it exists
+        for _, element in ipairs(elementsToMove) do
+            if element then element.Parent = rs end
+        end
+    end,
+})
