@@ -82,11 +82,12 @@ resizeHandle.Position = UDim2.new(1, -20, 1, -20)  -- Bottom right corner
 resizeHandle.BackgroundColor3 = Color3.new(0.7, 0.7, 0.7)  -- Light grey
 resizeHandle.Parent = textLabel  -- Parent the resize handle to the TextLabel
 
--- Variables for dragging
+-- Variables for dragging and resizing
+local UserInputService = game:GetService("UserInputService")
 local dragging = false
+local resizeDragging = false
 local dragStart = nil
 local startPos = nil
-local resizeDragging = false
 local resizeStart = nil
 local startSize = nil
 
@@ -104,7 +105,7 @@ local function update(input)
     end
 end
 
--- Function to start dragging
+-- Function to start dragging the textLabel
 textLabel.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -137,7 +138,7 @@ resizeHandle.InputBegan:Connect(function(input)
 end)
 
 -- Update position on input change
-game:GetService("UserInputService").InputChanged:Connect(update)
+UserInputService.InputChanged:Connect(update)
 
 -- Function to minimize or restore the GUI
 local function minimize()
@@ -146,7 +147,6 @@ local function minimize()
         textLabel.Text = ""  -- Clear text when minimized
     else
         textLabel.Size = UDim2.new(0, 400, 0, 300)  -- Restore height
-        -- No text is restored; it will display whatever is generated in the main loop.
     end
 end
 
