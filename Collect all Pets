@@ -22,11 +22,10 @@ local isCheckingZone = false -- For Zone Checking toggle
 
 local player = game:GetService("Players").LocalPlayer
 local petScore = player:WaitForChild("CurrentPetScore")
-local shinyScore = player:WaitForChild("ShinyScore")
 
--- Function to determine the zone number based on pet score and shiny level
-local function getZoneNumber(score, shinyLevel)
-    if score > 210
+-- Function to determine the zone number based on pet score
+local function getZoneNumber(score)
+    if score > 210 then
         return 8
     elseif score > 175 then
         return 6
@@ -53,7 +52,7 @@ local ToggleZoneCheck = MainTab:CreateToggle({
         if Value then
             coroutine.wrap(function()
                 while isCheckingZone do
-                    local zoneNumber = getZoneNumber(petScore.Value, shinyScore.Value)
+                    local zoneNumber = getZoneNumber(petScore.Value)
 
                     -- Fire the event if the player hasn't yet reached zone 8
                     if zoneNumber == 8 then
@@ -69,6 +68,7 @@ local ToggleZoneCheck = MainTab:CreateToggle({
         end
     end,
 })
+
 
 -- Toggle 1: Auto Fuse
 local Toggle1 = MainTab:CreateToggle({
