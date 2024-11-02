@@ -26,7 +26,7 @@ local shinyScore = player:WaitForChild("ShinyScore")
 
 -- Function to determine the zone number based on pet score and shiny level
 local function getZoneNumber(score, shinyLevel)
-    if score >= 210 and shinyLevel >= 100 then
+    if score > 210
         return 8
     elseif score > 175 then
         return 6
