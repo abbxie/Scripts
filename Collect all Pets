@@ -135,9 +135,13 @@ MainTab:CreateButton({
 MainTab:CreateButton({
     Name = "Equip Best",
     Callback = function()
-        game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+        while true do
+            game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+            wait(1800) -- waits 1800 seconds (30 minutes)
+        end
     end,
 })
+
 
 MainTab:CreateButton({
     Name = "Remote Spy",
