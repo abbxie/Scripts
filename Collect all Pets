@@ -132,15 +132,24 @@ MainTab:CreateButton({
     end,
 })
 
-MainTab:CreateButton({
-    Name = "Equip Best",
-    Callback = function()
-        while true do
-            game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
-            wait(1800) -- waits 1800 seconds (30 minutes)
+local equipBestEnabled = false  -- Variable to track toggle state
+MainTab:CreateToggle({
+    Name = "Auto Equip Best",
+    CurrentValue = false,
+    Flag = "EquipBestToggle",
+    Callback = function(Value)
+        equipBestEnabled = Value
+        if equipBestEnabled then
+            coroutine.wrap(function()
+                while equipBestEnabled do
+                    game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
+                    wait(1800)  -- Wait 1800 seconds (30 minutes)
+                end
+            end)()
         end
     end,
 })
+
 
 
 MainTab:CreateButton({
