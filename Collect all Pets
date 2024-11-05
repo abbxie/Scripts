@@ -143,7 +143,7 @@ MainTab:CreateToggle({
             coroutine.wrap(function()
                 while equipBestEnabled do
                     game:GetService("ReplicatedStorage").Remotes.EquipBest:FireServer()
-                    wait(600)  --  in secs
+                    wait(300)  --  in secs
                 end
             end)()
         end
