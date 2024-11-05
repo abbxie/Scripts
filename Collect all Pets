@@ -25,10 +25,8 @@ local petScore = player:WaitForChild("CurrentPetScore")
 
 -- Function to determine the zone number based on pet score
 local function getZoneNumber(score)
-    if score > 200 then
+    if score > 210 then
         return 8
-    elseif score > 180 then
-        return 7
     elseif score > 175 then
         return 6
     elseif score > 120 then
@@ -57,8 +55,8 @@ local ToggleZoneCheck = MainTab:CreateToggle({
                     local zoneNumber = getZoneNumber(petScore.Value)
 
                     -- Fire the event if the player hasn't yet reached zone 8
-                    if zoneNumber == 8 then
-                        break  -- Exit the loop once zone 8 is reached
+                    if zoneNumber == 9 then
+                        break  -- Exit the loop once zone 9 is reached
                     else
                         local args = { [1] = zoneNumber }
                         game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(unpack(args))
