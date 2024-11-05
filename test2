@@ -11,19 +11,6 @@ local Window = Rayfield:CreateWindow({
         FileName = "Big Hub"
     }
 })
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
-print("Rayfield loaded successfully")
-
-local Window = Rayfield:CreateWindow({
-    Name = "Rayfield Example Window",
-    LoadingTitle = "Rayfield Interface Suite",
-    LoadingSubtitle = "by Sirius",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil, -- Specify a folder name if needed
-        FileName = "Big Hub"
-    }
-})
 
 local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Section Example")
@@ -38,45 +25,19 @@ local petScore = player:WaitForChild("CurrentPetScore")
 
 -- Function to determine the zone number based on pet score
 local function getZoneNumber(score)
-    if score > 15 then
-        return 2
-    elseif score >= 40 then
-        return 3
-    elseif score >= 75 then
-        return 4
-    elseif score >= 120 then
-        return 5
-    elseif score >= 175 then
-        return 6
-    elseif score >= 210 then
+    if score > 210 then
         return 7
+    elseif score > 175 then
+        return 6
+    elseif score > 120 then
+        return 5
+    elseif score > 75 then
+        return 4
+    elseif score > 40 then
+        return 3
+    elseif score > 15 then
+        return 2
     else
-        return 8
+        return 1
     end
 end
--- Toggle: Start/Stop Zone Check
-local ToggleZoneCheck = MainTab:CreateToggle({
-    Name = "Auto Zone Check",
-    CurrentValue = false,
-    Flag = "ToggleZoneCheck",
-    Callback = function(Value)
-        isCheckingZone = Value
-        if Value then
-            coroutine.wrap(function()
-                while isCheckingZone do
-                    local zoneNumber = getZoneNumber(petScore.Value)
-
-                    -- Fire the event if the player hasn't yet reached zone 8
-                    if zoneNumber == 8 then
-                        break  -- Exit the loop once zone 8 is reached
-                    else
-                        local args = { [1] = zoneNumber }
-                        game:GetService("ReplicatedStorage").Remotes.OnAreaButton:FireServer(unpack(args))
-                    end
-
-                    wait(1)  -- Wait before checking again
-                end
-            end)()
-        end
-    end,
-})
