@@ -38,17 +38,19 @@ local petScore = player:WaitForChild("CurrentPetScore")
 
 -- Function to determine the zone number based on pet score
 local function getZoneNumber(score)
-    if score > 15 then
+    if score < 15 then
         return 2
-    elseif score > 40 then
+    elseif score <= 40 then
         return 3
-    elseif score > 75 then
+    elseif score <= 75 then
         return 4
-    elseif score > 120 then
+    elseif score <= 120 then
         return 5
-    elseif score > 175 then
+    elseif score <= 175 then
         return 6
-    elseif score > 210 then
+    elseif score <= 210 then
+        return 7
+    else
         return 8
     end
 end
