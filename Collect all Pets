@@ -185,9 +185,7 @@ MainTab:CreateButton({
                 if screenGui.Main:FindFirstChild("AutoFuse") then
                     screenGui.Main.AutoFuse.Parent = replicatedStorage
                 end
-                if screenGui.Main:FindFirstChild("Factory") then
-                    screenGui.Main.Factory.Parent = replicatedStorage
-                end
+
             end
         end
 
