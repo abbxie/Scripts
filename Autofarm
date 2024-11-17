@@ -22,7 +22,7 @@ Tab:AddToggle({
 
 local player = game:GetService("Players").LocalPlayer
 local checklist = player.PlayerGui.ScreenGui.Main.Left.Checklist
-local maxRarity = 8  -- Maximum rarity number
+local maxRarity = 6  -- Maximum rarity number
 
 local rarityNames = {
     [1] = "Common",
