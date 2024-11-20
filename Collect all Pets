@@ -110,6 +110,25 @@ local Toggle2 = MainTab:CreateToggle({
     end,
 })
 
+-- Toggle: Auto Claim Sub Boost
+local ToggleBoost = MainTab:CreateToggle({
+    Name = "Auto Claim Sub Boost",
+    CurrentValue = false,
+    Flag = "ToggleBoost",
+    Callback = function(Value)
+        isBoosting = Value
+        if Value then
+            coroutine.wrap(function()
+                while isBoosting do
+                    game:GetService("ReplicatedStorage").Remotes.ClaimSubBoost:FireServer()
+                    wait(0.1)
+                end
+            end)()
+        end
+    end,
+})
+
+
 -- Buttons for loading scripts and actions
 MainTab:CreateButton({
     Name = "Script 1",
