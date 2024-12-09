@@ -1,0 +1,105 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
+print("Rayfield loaded successfully")
+
+local Window = Rayfield:CreateWindow({
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, -- Specify a folder name if needed
+        FileName = "Big Hub"
+    }
+})
+
+local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+local Section = MainTab:CreateSection("Section Example")
+
+-- Toggle for "Auto Zone Check"
+local Toggle1 = MainTab:CreateToggle({
+    Name = "Auto Zone Check",
+    CurrentValue = false,
+    Flag = "Auothatch", -- Unique identifier for this toggle
+    Callback = function(Value)
+        if Value then
+            local keepRunning = true
+            task.spawn(function()
+                while keepRunning do
+                    local args = {
+                        [1] = "PurchaseEgg",
+                        [2] = "Noir Egg",
+                        [3] = "Multi"
+                    }
+                    game:GetService("ReplicatedStorage").NetworkRemoteEvent:FireServer(unpack(args))
+                    task.wait(0.1)
+
+                    -- Check the toggle's state to potentially stop the loop
+                    if not Rayfield.Flags.Auothatch then
+                        keepRunning = false
+                    end
+                end
+                print("Auto Zone Check loop stopped.")
+            end)
+        end
+    end,
+})
+
+-- Toggle for "Collect Chest Reward"
+local Toggle2 = MainTab:CreateToggle({
+    Name = "Auto Chest Collect",
+    CurrentValue = false,
+    Flag = "AutoChestCollect", -- Unique identifier for this toggle
+    Callback = function(Value)
+        if Value then
+            local keepRunning = true
+            task.spawn(function()
+                while keepRunning do
+                    local args = {
+                        [1] = "CollectChestReward",
+                        [2] = "The Floating Island"
+                    }
+                    game:GetService("ReplicatedStorage").NetworkRemoteEvent:FireServer(unpack(args))
+                    task.wait(0.1)
+
+                    -- Check the toggle's state to potentially stop the loop
+                    if not Rayfield.Flags.AutoChestCollect then
+                        keepRunning = false
+                    end
+                end
+                print("Auto Chest Collect loop stopped.")
+            end)
+        end
+    end,
+})
+
+-- Toggle for deleting PetHatch and MultiPetHatch
+local Toggle3 = MainTab:CreateToggle({
+    Name = "Delete Hatch Modules",
+    CurrentValue = false,
+    Flag = "DeleteHatchModules", -- Unique identifier for this toggle
+    Callback = function(Value)
+        local replicatedStorage = game:GetService("ReplicatedStorage")
+        local eggService = replicatedStorage:FindFirstChild("Assets"):FindFirstChild("Modules"):FindFirstChild("EggService")
+
+        if eggService then
+            local petHatch = eggService:FindFirstChild("PetHatch")
+            local multiPetHatch = eggService:FindFirstChild("MultiPetHatch")
+
+            if petHatch then
+                petHatch:Destroy()
+                print("PetHatch deleted.")
+            else
+                warn("PetHatch not found!")
+            end
+
+            if multiPetHatch then
+                multiPetHatch:Destroy()
+                print("MultiPetHatch deleted.")
+            else
+                warn("MultiPetHatch not found!")
+            end
+        else
+            warn("EggService not found!")
+        end
+    end,
+})
