@@ -1,4 +1,4 @@
-loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
+loadstring(game:HttpGet(('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Bubble')))()
 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
 print("Rayfield loaded successfully")
