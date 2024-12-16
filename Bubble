@@ -29,7 +29,7 @@ local Toggle1 = MainTab:CreateToggle({
                 while keepRunning do
                     local args = {
                         [1] = "PurchaseEgg",
-                        [2] = "Noir Egg",
+                        [2] = "Dark Realm Egg",
                         [3] = "Multi"
                     }
                     game:GetService("ReplicatedStorage").NetworkRemoteEvent:FireServer(unpack(args))
