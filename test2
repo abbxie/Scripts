@@ -121,6 +121,19 @@ local function createScrollGUI()
         end
     end)
 
+    -- Create the scroll frame for paths
+    scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 30)  -- Make space for draggable bar
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.Parent = frame
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 5)
+    UIListLayout.Parent = scrollFrame
+
     return frame
 end
 
@@ -160,5 +173,13 @@ local Toggle = MainTab:CreateToggle({
     end,
 })
 
--- Create the GUI and start the listener
-local frame = createScrollGUI()
+-- Create the GUI when toggle is enabled
+local function initializeGUI()
+    if not listenerActive then
+        -- Create the GUI and start the listener
+        createScrollGUI()
+    end
+end
+
+-- Initial creation of the GUI
+initializeGUI()
