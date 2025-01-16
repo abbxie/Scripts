@@ -22,6 +22,7 @@ local Section = MainTab:CreateSection("Section Example")
 local listenerActive = false
 local scrollFrame
 local clickConnection
+local screenGui -- Variable to store the screen GUI for easy removal
 
 -- Function to get the object path excluding 'Ugc' and using [" "] for special characters
 local function getObjectPath(obj)
@@ -77,7 +78,7 @@ end
 -- Create a GUI for displaying object paths
 local function createScrollGUI()
     local player = game.Players.LocalPlayer
-    local screenGui = Instance.new("ScreenGui")
+    screenGui = Instance.new("ScreenGui")
     screenGui.Parent = player.PlayerGui
 
     local frame = Instance.new("Frame")
@@ -116,7 +117,7 @@ local function listenForClicks()
     end)
 end
 
--- Toggle control to start/stop the listener
+-- Toggle control to start/stop the listener and close the GUI when off
 local Toggle = MainTab:CreateToggle({
     Name = "Toggle Listener",
     CurrentValue = false,
@@ -130,13 +131,16 @@ local Toggle = MainTab:CreateToggle({
             listenForClicks()
             print("Listener started.")
         else
-            -- Stop the listener if toggle is false
+            -- Stop the listener and remove the GUI if toggle is false
             if clickConnection then
                 clickConnection:Disconnect()
                 clickConnection = nil
             end
             listenerActive = false
-            print("Listener stopped.")
+            if screenGui then
+                screenGui:Destroy()  -- Remove the GUI when listener is stopped
+            end
+            print("Listener stopped and GUI closed.")
         end
     end,
 })
