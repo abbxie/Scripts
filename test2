@@ -1,6 +1,8 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
+-- Load Rayfield library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() 
 print("Rayfield loaded successfully")
 
+-- Create the Rayfield window
 local Window = Rayfield:CreateWindow({
     Name = "Rayfield Example Window",
     LoadingTitle = "Rayfield Interface Suite",
@@ -12,32 +14,124 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
-local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
+-- Create a tab and section in the Rayfield window
+local MainTab = Window:CreateTab("Tab Example", 4483362458)
 local Section = MainTab:CreateSection("Section Example")
 
--- Variables for toggles
-local isRunning = false -- For Auto Fuse toggle
-local isJumping = false -- For Auto Jump toggle
-local isCheckingZone = false -- For Zone Checking toggle
+-- Variable to track listener state
+local listenerActive = false
 
-local player = game:GetService("Players").LocalPlayer
-local petScore = player:WaitForChild("CurrentPetScore")
+-- Function to get the object path excluding 'Ugc' and using [" "] for special characters
+local function getObjectPath(obj)
+    local path = ""
+    local baseObject = game.Workspace  -- Ensure starting from Workspace
 
--- Function to determine the zone number based on pet score
-local function getZoneNumber(score)
-    if score > 210 then
-        return 7
-    elseif score > 175 then
-        return 6
-    elseif score > 120 then
-        return 5
-    elseif score > 75 then
-        return 4
-    elseif score > 40 then
-        return 3
-    elseif score > 15 then
-        return 2
-    else
-        return 1
+    while obj do
+        -- Skip 'Ugc' in the path
+        if obj.Parent and obj.Parent.Name == "Ugc" then
+            obj = obj.Parent.Parent  -- Skip the 'Ugc' parent
+        else
+            -- Check if the object name contains spaces or special characters
+            if string.match(obj.Name, "%s") or string.match(obj.Name, "%W") then
+                path = string.format('["%s"]', obj.Name) .. path
+            else
+                path = obj.Name .. "." .. path  -- Use period for normal object names
+            end
+            obj = obj.Parent
+        end
     end
+    
+    -- Ensure 'Workspace' is included in the path
+    if path:sub(1, 1) ~= "Workspace" then
+        path = "Workspace." .. path  -- Use period for workspace
+    end
+
+    -- Remove the trailing period
+    if path:sub(-1) == "." then
+        path = path:sub(1, -2)
+    end
+
+    return path
 end
+
+-- Function to display object paths in the scrollable GUI
+local function displayObjectPath(path, scrollFrame)
+    local textBox = Instance.new("TextBox")
+    textBox.Text = path
+    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    textBox.BackgroundTransparency = 0.8
+    textBox.Size = UDim2.new(1, 0, 0, 30)
+    textBox.TextWrapped = true
+    textBox.TextScaled = true
+    textBox.ClearTextOnFocus = false  -- Keep text when clicking in the box
+    textBox.MultiLine = true
+    textBox.Parent = scrollFrame
+
+    -- Adjust the canvas size to allow infinite scrolling
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollFrame.CanvasSize.Y.Offset + textBox.Size.Y.Offset + 5)
+end
+
+-- Create a GUI for displaying object paths
+local function createScrollGUI()
+    local player = game.Players.LocalPlayer
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player.PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.4, 0, 0.6, 0)  -- Adjust size as necessary
+    frame.Position = UDim2.new(0.3, 0, 0.2, 0)  -- Adjust position as necessary
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = screenGui
+
+    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.Parent = frame
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 5)
+    UIListLayout.Parent = scrollFrame
+
+    return scrollFrame
+end
+
+-- Function to listen for mouse clicks and print the object path to the scrollable GUI
+local function listenForClicks(scrollFrame)
+    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        -- Ensure the input is from the mouse and not processed by other UI
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
+            local mouse = game.Players.LocalPlayer:GetMouse()
+            local clickedObject = mouse.Target
+
+            if clickedObject then
+                local objectPath = getObjectPath(clickedObject)
+                displayObjectPath(objectPath, scrollFrame)
+            end
+        end
+    end)
+end
+
+-- Toggle control to start/stop the listener
+local Toggle = MainTab:CreateToggle({
+    Name = "Toggle Listener",
+    CurrentValue = false,
+    Flag = "ToggleListener",  -- The identifier for configuration saving
+    Callback = function(Value)
+        listenerActive = Value
+        local scrollFrame = createScrollGUI()  -- Create the GUI
+
+        if listenerActive then
+            -- Start listening for clicks if toggle is true
+            listenForClicks(scrollFrame)
+            print("Listener started.")
+        else
+            -- Stop the listener if toggle is false
+            print("Listener stopped.")
+        end
+    end,
+})
