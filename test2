@@ -24,14 +24,6 @@ local scrollFrame
 local clickConnection
 local screenGui -- Variable to store the screen GUI for easy removal
 
--- Create a header label
-local header = Instance.new("TextLabel")
-header.Text = "Your Header Text Here"
-header.TextColor3 = Color3.fromRGB(255, 255, 255)
-header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-header.Size = UDim2.new(1, 0, 0, 30)  -- Header size
-header.Parent = screenGui
-
 -- Function to get the object path excluding 'Ugc' and using [" "] for special characters
 local function getObjectPath(obj)
     local path = ""
@@ -89,9 +81,18 @@ local function createScrollGUI()
     screenGui = Instance.new("ScreenGui")
     screenGui.Parent = player.PlayerGui
 
+    -- Create header
+    local header = Instance.new("TextLabel")
+    header.Text = "Your Header Text Here"
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
+    header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    header.Size = UDim2.new(1, 0, 0, 30)  -- Header size
+    header.Parent = screenGui
+
+    -- Adjust frame position to account for header space
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0.4, 0, 0.6, 0)  -- Adjust size as necessary
-    frame.Position = UDim2.new(0.3, 0, 0.3, 0)  -- Adjusted for header space
+    frame.Position = UDim2.new(0.3, 0, 0.35, 0)  -- Adjusted for header space
     frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
