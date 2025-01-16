@@ -57,44 +57,22 @@ local function getObjectPath(obj)
     return path
 end
 
--- Function to display object paths in the scrollable GUI with a copy button
+-- Function to display object paths in the scrollable GUI
 local function displayObjectPath(path)
-    -- Create the frame to hold both the text and the copy button
-    local pathFrame = Instance.new("Frame")
-    pathFrame.Size = UDim2.new(1, 0, 0, 30)
-    pathFrame.BackgroundTransparency = 1
-    pathFrame.Parent = scrollFrame
-
-    -- Create the TextLabel for the object path (non-selectable)
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Text = path
-    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    textLabel.BackgroundTransparency = 0.8
-    textLabel.Size = UDim2.new(0.8, 0, 1, 0)  -- Adjust size for the text label
-    textLabel.TextWrapped = true
-    textLabel.TextScaled = true
-    textLabel.ClearTextOnFocus = false
-    textLabel.TextButton = false  -- Disable text selection
-    textLabel.Parent = pathFrame
-
-    -- Create the copy button
-    local copyButton = Instance.new("TextButton")
-    copyButton.Text = "Copy"
-    copyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    copyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    copyButton.Size = UDim2.new(0.2, 0, 1, 0)  -- Adjust size for the button
-    copyButton.Position = UDim2.new(0.8, 0, 0, 0)  -- Position it next to the text label
-    copyButton.Parent = pathFrame
-
-    -- Function to copy text to clipboard
-    copyButton.MouseButton1Click:Connect(function()
-        setclipboard(path)  -- Copies the path to clipboard
-        print("Path copied: " .. path)
-    end)
+    local textBox = Instance.new("TextBox")
+    textBox.Text = path
+    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    textBox.BackgroundTransparency = 0.8
+    textBox.Size = UDim2.new(1, 0, 0, 30)
+    textBox.TextWrapped = true
+    textBox.TextScaled = true
+    textBox.ClearTextOnFocus = false  -- Keep text when clicking in the box
+    textBox.MultiLine = true
+    textBox.Parent = scrollFrame
 
     -- Adjust the canvas size to allow infinite scrolling
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollFrame.CanvasSize.Y.Offset + pathFrame.Size.Y.Offset + 5)
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollFrame.CanvasSize.Y.Offset + textBox.Size.Y.Offset + 5)
 end
 
 -- Create a GUI for displaying object paths
@@ -168,4 +146,4 @@ local Toggle = MainTab:CreateToggle({
 })
 
 -- Make sure the Rayfield window is open and functional
-Window:Render()  -- This ensures that the wi
+Window:Render()  -- This ensures that the window is rendered
