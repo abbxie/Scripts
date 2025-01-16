@@ -1,56 +1,119 @@
--- Function to get the object path excluding 'Ugc'
+ -- Load Rayfield library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+print("Rayfield loaded successfully")
+
+-- Create the Rayfield window
+local Window = Rayfield:CreateWindow({
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, -- Specify a folder name if needed
+        FileName = "Big Hub"
+    }
+})
+
+-- Create the main frame for the GUI
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0.4, 0, 0.6, 0)
+mainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BackgroundTransparency = 0.5
+mainFrame.Parent = game.Players.LocalPlayer.PlayerGui
+
+-- Create a header frame
+local headerFrame = Instance.new("Frame")
+headerFrame.Size = UDim2.new(1, 0, 0, 30)
+headerFrame.Position = UDim2.new(0, 0, 0, 0)
+headerFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+headerFrame.Parent = mainFrame
+
+-- Create the header text
+local header = Instance.new("TextLabel")
+header.Text = "Header Text Here"
+header.TextColor3 = Color3.fromRGB(255, 255, 255)
+header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+header.Size = UDim2.new(1, 0, 1, 0)
+header.Parent = headerFrame
+
+-- Create a scrollable frame for the content
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+scrollFrame.Position = UDim2.new(0, 0, 0, headerFrame.Size.Y.Offset)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.Parent = mainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Parent = scrollFrame
+
+-- Create drag functionality for the header
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+headerFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if dragging then
+                update(input)
+            end
+        end)
+    end
+end)
+
+headerFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Toggle listener
+local listenerActive = false
+local clickConnection
+local screenGui
+
 local function getObjectPath(obj)
     local path = ""
-    local baseObject = game.Workspace  -- Ensure starting from Workspace
+    local baseObject = game.Workspace
 
     while obj do
-        -- Skip 'Ugc' in the path
         if obj.Parent and obj.Parent.Name == "Ugc" then
-            obj = obj.Parent.Parent  -- Skip the 'Ugc' parent
+            obj = obj.Parent.Parent
         else
-            path = obj.Name .. "/" .. path
+            if string.match(obj.Name, "%s") or string.match(obj.Name, "%W") then
+                path = string.format('["%s"]', obj.Name) .. path
+            else
+                path = obj.Name .. "." .. path
+            end
             obj = obj.Parent
         end
     end
-    
-    -- Ensure 'Workspace' is included in the path
+
     if path:sub(1, 1) ~= "Workspace" then
-        path = "Workspace/" .. path
+        path = "Workspace." .. path
+    end
+
+    if path:sub(-1) == "." then
+        path = path:sub(1, -2)
     end
 
     return path
 end
 
--- Create a GUI for displaying the object paths
-local function createScrollGUI()
-    local player = game.Players.LocalPlayer
-    local screenGui = Instance.new("ScreenGui")
-    screenGui.Parent = player.PlayerGui
-
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.4, 0, 0.6, 0)  -- Adjust size as necessary
-    frame.Position = UDim2.new(0.3, 0, 0.2, 0)  -- Adjust position as necessary
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    frame.BackgroundTransparency = 0.5
-    frame.Parent = screenGui
-
-    local scrollFrame = Instance.new("ScrollingFrame")
-    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
-    scrollFrame.BackgroundTransparency = 1
-    scrollFrame.Parent = frame
-
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Padding = UDim.new(0, 5)
-    UIListLayout.Parent = scrollFrame
-
-    return scrollFrame
-end
-
--- Function to display object paths in the scrollable GUI
-local function displayObjectPath(path, scrollFrame)
+local function displayObjectPath(path)
     local textBox = Instance.new("TextBox")
     textBox.Text = path
     textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -59,30 +122,75 @@ local function displayObjectPath(path, scrollFrame)
     textBox.Size = UDim2.new(1, 0, 0, 30)
     textBox.TextWrapped = true
     textBox.TextScaled = true
-    textBox.ClearTextOnFocus = false  -- Keep text when clicking in the box
+    textBox.ClearTextOnFocus = false
     textBox.MultiLine = true
     textBox.Parent = scrollFrame
 
-    -- Adjust the canvas size to allow infinite scrolling
     scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollFrame.CanvasSize.Y.Offset + textBox.Size.Y.Offset + 5)
 end
 
--- Listen for mouse clicks and print the object path to the scrollable GUI
-local function listenForClicks(scrollFrame)
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        -- Ensure the input is from the mouse and not processed by other UI
+local function createScrollGUI()
+    local player = game.Players.LocalPlayer
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player.PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.4, 0, 0.6, 0)
+    frame.Position = UDim2.new(0.3, 0, 0.2, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = screenGui
+
+    scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 30)
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.Parent = frame
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 5)
+    UIListLayout.Parent = scrollFrame
+end
+
+local function listenForClicks()
+    clickConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
         if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
             local mouse = game.Players.LocalPlayer:GetMouse()
             local clickedObject = mouse.Target
 
             if clickedObject then
                 local objectPath = getObjectPath(clickedObject)
-                displayObjectPath(objectPath, scrollFrame)
+                displayObjectPath(objectPath)
             end
         end
     end)
 end
 
--- Create the GUI and start listening for clicks
-local scrollFrame = createScrollGUI()
-listenForClicks(scrollFrame)
+local Toggle = Window:CreateToggle({
+    Name = "Toggle Listener",
+    CurrentValue = false,
+    Flag = "ToggleListener",
+    Callback = function(Value)
+        listenerActive = Value
+
+        if listenerActive then
+            createScrollGUI()
+            listenForClicks()
+            print("Listener started.")
+        else
+            if clickConnection then
+                clickConnection:Disconnect()
+                clickConnection = nil
+            end
+            listenerActive = false
+            if screenGui then
+                screenGui:Destroy()
+            end
+            print("Listener stopped and GUI closed.")
+        end
+    end,
+})
+
+Window:Render()
