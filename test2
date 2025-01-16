@@ -81,27 +81,28 @@ local function createScrollGUI()
     screenGui = Instance.new("ScreenGui")
     screenGui.Parent = player.PlayerGui
 
-    -- Create header
+    -- Create frame for the entire GUI
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.4, 0, 0.6, 0)  -- Adjust size as necessary
+    frame.Position = UDim2.new(0.3, 0, 0.2, 0)  -- Adjust position as necessary
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = screenGui
+
+    -- Create header as part of the frame
     local header = Instance.new("TextLabel")
     header.Text = "Your Header Text Here"
     header.TextColor3 = Color3.fromRGB(255, 255, 255)
     header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     header.Size = UDim2.new(1, 0, 0, 30)  -- Header size
-    header.Position = UDim2.new(0, 0, 0, 0)  -- Ensure header is at the top
-    header.Parent = screenGui
+    header.Position = UDim2.new(0, 0, 0, 0)  -- Place header at top of frame
+    header.Parent = frame
 
-    -- Adjust frame position to account for header space
-    local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0.4, 0, 0.6, 0)  -- Adjust size as necessary
-    frame.Position = UDim2.new(0.3, 0, 0.35, 0)  -- Adjusted for header space
-    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    frame.BackgroundTransparency = 0.5
-    frame.Parent = screenGui
-
+    -- Create scrollable content below the header
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
+    scrollFrame.Position = UDim2.new(0, 0, 0, 30)  -- Offset by header height
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.Parent = frame
 
