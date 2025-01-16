@@ -168,4 +168,4 @@ local Toggle = MainTab:CreateToggle({
 })
 
 -- Make sure the Rayfield window is open and functional
-Window:Render()  -- This ensures that the window is rendered
+Window:Render()  -- This ensures that the wi
