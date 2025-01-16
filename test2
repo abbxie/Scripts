@@ -1,5 +1,5 @@
 -- Load Rayfield library
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() 
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 print("Rayfield loaded successfully")
 
 -- Create the Rayfield window
@@ -20,6 +20,7 @@ local Section = MainTab:CreateSection("Section Example")
 
 -- Variable to track listener state
 local listenerActive = false
+local scrollFrame
 
 -- Function to get the object path excluding 'Ugc' and using [" "] for special characters
 local function getObjectPath(obj)
@@ -55,7 +56,7 @@ local function getObjectPath(obj)
 end
 
 -- Function to display object paths in the scrollable GUI
-local function displayObjectPath(path, scrollFrame)
+local function displayObjectPath(path)
     local textBox = Instance.new("TextBox")
     textBox.Text = path
     textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -85,7 +86,7 @@ local function createScrollGUI()
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
 
-    local scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
     scrollFrame.Position = UDim2.new(0, 0, 0, 0)
     scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
@@ -96,13 +97,12 @@ local function createScrollGUI()
     UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
     UIListLayout.Padding = UDim.new(0, 5)
     UIListLayout.Parent = scrollFrame
-
-    return scrollFrame
 end
 
 -- Function to listen for mouse clicks and print the object path to the scrollable GUI
-local function listenForClicks(scrollFrame)
-    game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+local function listenForClicks()
+    local connection
+    connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
         -- Ensure the input is from the mouse and not processed by other UI
         if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
             local mouse = game.Players.LocalPlayer:GetMouse()
@@ -110,10 +110,12 @@ local function listenForClicks(scrollFrame)
 
             if clickedObject then
                 local objectPath = getObjectPath(clickedObject)
-                displayObjectPath(objectPath, scrollFrame)
+                displayObjectPath(objectPath)
             end
         end
     end)
+    
+    return connection
 end
 
 -- Toggle control to start/stop the listener
@@ -123,15 +125,24 @@ local Toggle = MainTab:CreateToggle({
     Flag = "ToggleListener",  -- The identifier for configuration saving
     Callback = function(Value)
         listenerActive = Value
-        local scrollFrame = createScrollGUI()  -- Create the GUI
 
         if listenerActive then
-            -- Start listening for clicks if toggle is true
-            listenForClicks(scrollFrame)
+            -- Create the GUI and start listening for clicks if toggle is true
+            createScrollGUI()
+            listenForClicks()
             print("Listener started.")
         else
-            -- Stop the listener if toggle is false
+            -- Clear the GUI and stop the listener if toggle is false
+            if scrollFrame then
+                for _, child in ipairs(scrollFrame:GetChildren()) do
+                    child:Destroy()  -- Remove all previous text boxes
+                end
+            end
+            listenerActive = false
             print("Listener stopped.")
         end
     end,
 })
+
+-- Make sure the Rayfield window is open and functional
+Window:Render()  -- This ensures that the window is rendered
