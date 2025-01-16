@@ -14,6 +14,9 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
+-- Create a tab in the window
+local MainTab = Window:CreateTab("Main Tab")
+
 -- Create the main frame for the GUI
 local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0.4, 0, 0.6, 0)
@@ -123,8 +126,8 @@ local function listenForClicks()
     end)
 end
 
--- Create the Toggle button in the Rayfield window
-local Toggle = Window:CreateToggle({
+-- Create the Toggle button inside MainTab
+local Toggle = MainTab:CreateToggle({
     Name = "Toggle Listener",
     CurrentValue = false,
     Flag = "ToggleListener",
