@@ -1,8 +1,8 @@
-loadstring(game:HttpGet(('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Bubble')))()
-
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
+-- Load Rayfield library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 print("Rayfield loaded successfully")
 
+-- Create the Rayfield window
 local Window = Rayfield:CreateWindow({
     Name = "Rayfield Example Window",
     LoadingTitle = "Rayfield Interface Suite",
@@ -14,94 +14,185 @@ local Window = Rayfield:CreateWindow({
     }
 })
 
-local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
-local Section = MainTab:CreateSection("Section Example")
+-- Create the main frame for the GUI
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0.4, 0, 0.6, 0)
+mainFrame.Position = UDim2.new(0.3, 0, 0.2, 0)
+mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+mainFrame.BackgroundTransparency = 0.5
+mainFrame.Parent = game.Players.LocalPlayer.PlayerGui
 
--- Toggle for "Auto Zone Check"
-local Toggle1 = MainTab:CreateToggle({
-    Name = "Auto Zone Check",
-    CurrentValue = false,
-    Flag = "Auothatch", -- Unique identifier for this toggle
-    Callback = function(Value)
-        if Value then
-            local keepRunning = true
-            task.spawn(function()
-                while keepRunning do
-                    local args = {
-                        [1] = "PurchaseEgg",
-                        [2] = "Dark Realm Egg",
-                        [3] = "Multi"
-                    }
-                    game:GetService("ReplicatedStorage").NetworkRemoteEvent:FireServer(unpack(args))
-                    task.wait(0.1)
+-- Create a header frame
+local headerFrame = Instance.new("Frame")
+headerFrame.Size = UDim2.new(1, 0, 0, 30)
+headerFrame.Position = UDim2.new(0, 0, 0, 0)
+headerFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+headerFrame.Parent = mainFrame
 
-                    -- Check the toggle's state to potentially stop the loop
-                    if not Rayfield.Flags.Auothatch then
-                        keepRunning = false
-                    end
-                end
-                print("Auto Zone Check loop stopped.")
-            end)
-        end
-    end,
-})
+-- Create the header text
+local header = Instance.new("TextLabel")
+header.Text = "Header Text Here"
+header.TextColor3 = Color3.fromRGB(255, 255, 255)
+header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+header.Size = UDim2.new(1, 0, 1, 0)
+header.Parent = headerFrame
 
--- Toggle for "Collect Chest Reward"
-local Toggle2 = MainTab:CreateToggle({
-    Name = "Auto Chest Collect",
-    CurrentValue = false,
-    Flag = "AutoChestCollect", -- Unique identifier for this toggle
-    Callback = function(Value)
-        if Value then
-            local keepRunning = true
-            task.spawn(function()
-                while keepRunning do
-                    local args = {
-                        [1] = "CollectChestReward",
-                        [2] = "The Floating Island"
-                    }
-                    game:GetService("ReplicatedStorage").NetworkRemoteEvent:FireServer(unpack(args))
-                    task.wait(0.1)
+-- Create a scrollable frame for the content
+local scrollFrame = Instance.new("ScrollingFrame")
+scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+scrollFrame.Position = UDim2.new(0, 0, 0, headerFrame.Size.Y.Offset)
+scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
+scrollFrame.BackgroundTransparency = 1
+scrollFrame.Parent = mainFrame
 
-                    -- Check the toggle's state to potentially stop the loop
-                    if not Rayfield.Flags.AutoChestCollect then
-                        keepRunning = false
-                    end
-                end
-                print("Auto Chest Collect loop stopped.")
-            end)
-        end
-    end,
-})
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Parent = scrollFrame
 
--- Toggle for deleting PetHatch and MultiPetHatch
-local Toggle3 = MainTab:CreateToggle({
-    Name = "Delete Hatch Modules",
-    CurrentValue = false,
-    Flag = "DeleteHatchModules", -- Unique identifier for this toggle
-    Callback = function(Value)
-        local replicatedStorage = game:GetService("ReplicatedStorage")
-        local eggService = replicatedStorage:FindFirstChild("Assets"):FindFirstChild("Modules"):FindFirstChild("EggService")
+-- Create drag functionality for the header
+local dragging
+local dragInput
+local dragStart
+local startPos
 
-        if eggService then
-            local petHatch = eggService:FindFirstChild("PetHatch")
-            local multiPetHatch = eggService:FindFirstChild("MultiPetHatch")
+local function update(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
 
-            if petHatch then
-                petHatch:Destroy()
-                print("PetHatch deleted.")
-            else
-                warn("PetHatch not found!")
+headerFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+        input.Changed:Connect(function()
+            if dragging then
+                update(input)
             end
+        end)
+    end
+end)
 
-            if multiPetHatch then
-                multiPetHatch:Destroy()
-                print("MultiPetHatch deleted.")
-            else
-                warn("MultiPetHatch not found!")
-            end
+headerFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- Toggle listener
+local listenerActive = false
+local clickConnection
+local screenGui
+
+local function getObjectPath(obj)
+    local path = ""
+    local baseObject = game.Workspace
+
+    while obj do
+        if obj.Parent and obj.Parent.Name == "Ugc" then
+            obj = obj.Parent.Parent
         else
-            warn("EggService not found!")
+            if string.match(obj.Name, "%s") or string.match(obj.Name, "%W") then
+                path = string.format('["%s"]', obj.Name) .. path
+            else
+                path = obj.Name .. "." .. path
+            end
+            obj = obj.Parent
+        end
+    end
+
+    if path:sub(1, 1) ~= "Workspace" then
+        path = "Workspace." .. path
+    end
+
+    if path:sub(-1) == "." then
+        path = path:sub(1, -2)
+    end
+
+    return path
+end
+
+local function displayObjectPath(path)
+    local textBox = Instance.new("TextBox")
+    textBox.Text = path
+    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    textBox.BackgroundTransparency = 0.8
+    textBox.Size = UDim2.new(1, 0, 0, 30)
+    textBox.TextWrapped = true
+    textBox.TextScaled = true
+    textBox.ClearTextOnFocus = false
+    textBox.MultiLine = true
+    textBox.Parent = scrollFrame
+
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 0, scrollFrame.CanvasSize.Y.Offset + textBox.Size.Y.Offset + 5)
+end
+
+local function createScrollGUI()
+    local player = game.Players.LocalPlayer
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player.PlayerGui
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0.4, 0, 0.6, 0)
+    frame.Position = UDim2.new(0.3, 0, 0.2, 0)
+    frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    frame.BackgroundTransparency = 0.5
+    frame.Parent = screenGui
+
+    scrollFrame = Instance.new("ScrollingFrame")
+    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 30)
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
+    scrollFrame.BackgroundTransparency = 1
+    scrollFrame.Parent = frame
+
+    local UIListLayout = Instance.new("UIListLayout")
+    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    UIListLayout.Padding = UDim.new(0, 5)
+    UIListLayout.Parent = scrollFrame
+end
+
+local function listenForClicks()
+    clickConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
+            local mouse = game.Players.LocalPlayer:GetMouse()
+            local clickedObject = mouse.Target
+
+            if clickedObject then
+                local objectPath = getObjectPath(clickedObject)
+                displayObjectPath(objectPath)
+            end
+        end
+    end)
+end
+
+-- Toggle for Listener using the Sirius library
+local Toggle = Rayfield:CreateToggle({
+    Name = "Toggle Listener",
+    CurrentValue = false,
+    Flag = "Toggle1", -- A flag for the configuration file
+    Callback = function(Value)
+        listenerActive = Value
+
+        if listenerActive then
+            createScrollGUI()
+            listenForClicks()
+            print("Listener started.")
+        else
+            if clickConnection then
+                clickConnection:Disconnect()
+                clickConnection = nil
+            end
+            listenerActive = false
+            if screenGui then
+                screenGui:Destroy()
+            end
+            print("Listener stopped and GUI closed.")
         end
     end,
 })
+
+-- Render the GUI
+Rayfield:Render()
