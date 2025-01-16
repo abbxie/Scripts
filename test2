@@ -65,18 +65,18 @@ local function displayObjectPath(path)
     pathFrame.BackgroundTransparency = 1
     pathFrame.Parent = scrollFrame
 
-    -- Create the TextBox for the object path
-    local textBox = Instance.new("TextBox")
-    textBox.Text = path
-    textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    textBox.BackgroundTransparency = 0.8
-    textBox.Size = UDim2.new(0.8, 0, 1, 0)  -- Adjust size for the text box
-    textBox.TextWrapped = true
-    textBox.TextScaled = true
-    textBox.ClearTextOnFocus = false
-    textBox.MultiLine = true
-    textBox.Parent = pathFrame
+    -- Create the TextLabel for the object path (non-selectable)
+    local textLabel = Instance.new("TextLabel")
+    textLabel.Text = path
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    textLabel.BackgroundTransparency = 0.8
+    textLabel.Size = UDim2.new(0.8, 0, 1, 0)  -- Adjust size for the text label
+    textLabel.TextWrapped = true
+    textLabel.TextScaled = true
+    textLabel.ClearTextOnFocus = false
+    textLabel.TextButton = false  -- Disable text selection
+    textLabel.Parent = pathFrame
 
     -- Create the copy button
     local copyButton = Instance.new("TextButton")
@@ -84,7 +84,7 @@ local function displayObjectPath(path)
     copyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
     copyButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     copyButton.Size = UDim2.new(0.2, 0, 1, 0)  -- Adjust size for the button
-    copyButton.Position = UDim2.new(0.8, 0, 0, 0)  -- Position it next to the text box
+    copyButton.Position = UDim2.new(0.8, 0, 0, 0)  -- Position it next to the text label
     copyButton.Parent = pathFrame
 
     -- Function to copy text to clipboard
