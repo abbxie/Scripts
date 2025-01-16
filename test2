@@ -23,6 +23,8 @@ local listenerActive = false
 local scrollFrame
 local clickConnection
 local screenGui -- Variable to store the screen GUI for easy removal
+local dragging = false
+local dragInput, dragStart, startPos
 
 -- Function to get the object path excluding 'Ugc' and using [" "] for special characters
 local function getObjectPath(obj)
@@ -88,12 +90,15 @@ local function createScrollGUI()
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
 
-    -- Make the frame draggable
-    local dragging = false
-    local dragStart = nil
-    local startPos = nil
+    -- Create the draggable header
+    local dragBar = Instance.new("Frame")
+    dragBar.Size = UDim2.new(1, 0, 0, 30)  -- Adjust the height of the draggable bar
+    dragBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    dragBar.BackgroundTransparency = 0.6
+    dragBar.Parent = frame
 
-    frame.InputBegan:Connect(function(input)
+    -- Handle dragging
+    dragBar.InputBegan:Connect(function(input, gameProcessed)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
@@ -101,14 +106,14 @@ local function createScrollGUI()
         end
     end)
 
-    frame.InputChanged:Connect(function(input)
+    dragBar.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
-    frame.InputEnded:Connect(function(input)
+    dragBar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
@@ -116,7 +121,7 @@ local function createScrollGUI()
 
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 30)  -- Below the draggable bar
     scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.Parent = frame
