@@ -9,7 +9,7 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "by Sirius",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = nil, -- Specify a folder name if needed
+        FolderName = nil, 
         FileName = "Big Hub"
     }
 })
@@ -91,7 +91,7 @@ local function createScrollGUI()
 
     -- Create header as part of the frame
     local header = Instance.new("TextLabel")
-    header.Text = "Your Header Text Here"
+    header.Text = "Header Text Here"
     header.TextColor3 = Color3.fromRGB(255, 255, 255)
     header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     header.Size = UDim2.new(1, 0, 0, 30)  -- Header size
