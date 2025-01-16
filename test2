@@ -90,15 +90,14 @@ local function createScrollGUI()
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
 
-    -- Create the draggable header
-    local dragBar = Instance.new("Frame")
-    dragBar.Size = UDim2.new(1, 0, 0, 30)  -- Adjust the height of the draggable bar
-    dragBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    dragBar.BackgroundTransparency = 0.6
-    dragBar.Parent = frame
+    -- Create the draggable bar
+    local draggableBar = Instance.new("Frame")
+    draggableBar.Size = UDim2.new(1, 0, 0, 30)  -- Make the bar span the top of the window
+    draggableBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    draggableBar.Parent = frame
 
-    -- Handle dragging
-    dragBar.InputBegan:Connect(function(input, gameProcessed)
+    -- Handle dragging for the entire frame (no separate bar)
+    draggableBar.InputBegan:Connect(function(input, gameProcessed)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
@@ -106,75 +105,57 @@ local function createScrollGUI()
         end
     end)
 
-    dragBar.InputChanged:Connect(function(input)
+    draggableBar.InputChanged:Connect(function(input)
         if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
             local delta = input.Position - dragStart
             frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
 
-    dragBar.InputEnded:Connect(function(input)
+    draggableBar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
 
-    scrollFrame = Instance.new("ScrollingFrame")
-    scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 30)  -- Below the draggable bar
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
-    scrollFrame.BackgroundTransparency = 1
-    scrollFrame.Parent = frame
-
-    local UIListLayout = Instance.new("UIListLayout")
-    UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    UIListLayout.Padding = UDim.new(0, 5)
-    UIListLayout.Parent = scrollFrame
+    return frame
 end
 
--- Function to listen for mouse clicks and print the object path to the scrollable GUI
-local function listenForClicks()
-    clickConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
-        -- Ensure the input is from the mouse and not processed by other UI
-        if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
-            local mouse = game.Players.LocalPlayer:GetMouse()
-            local clickedObject = mouse.Target
-
-            if clickedObject then
-                local objectPath = getObjectPath(clickedObject)
-                displayObjectPath(objectPath)
-            end
-        end
-    end)
+-- Function to stop printing when listener is turned off
+local function stopListener()
+    if clickConnection then
+        clickConnection:Disconnect()
+    end
+    listenerActive = false
 end
 
--- Toggle control to start/stop the listener and close the GUI when off
+-- Toggle listener with Rayfield
 local Toggle = MainTab:CreateToggle({
-    Name = "Toggle Listener",
+    Name = "Start/Stop Listener",
     CurrentValue = false,
-    Flag = "ToggleListener",  -- The identifier for configuration saving
-    Callback = function(Value)
-        listenerActive = Value
-
-        if listenerActive then
-            -- Create the GUI and start listening for clicks if toggle is true
-            createScrollGUI()
-            listenForClicks()
-            print("Listener started.")
+    Flag = "ToggleListener",
+    Callback = function(value)
+        if value then
+            listenerActive = true
+            -- Start the listener
+            clickConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
+                    local mouse = game.Players.LocalPlayer:GetMouse()
+                    local clickedObject = mouse.Target
+                    if clickedObject then
+                        local objectPath = getObjectPath(clickedObject)
+                        displayObjectPath(objectPath)
+                    end
+                end
+            end)
         else
-            -- Stop the listener and remove the GUI if toggle is false
-            if clickConnection then
-                clickConnection:Disconnect()
-                clickConnection = nil
-            end
-            listenerActive = false
+            stopListener()  -- Stop the listener
             if screenGui then
-                screenGui:Destroy()  -- Remove the GUI when listener is stopped
+                screenGui:Destroy()  -- Destroy the GUI
             end
-            print("Listener stopped and GUI closed.")
         end
     end,
 })
 
--- Make sure the Rayfield window is open and functional
-Window:Render()  -- This ensures that the window is rendered
+-- Create the GUI and start the listener
+local frame = createScrollGUI()
