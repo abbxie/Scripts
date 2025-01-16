@@ -1,3 +1,4 @@
+-- Load Rayfield library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 print("Rayfield loaded successfully")
 
@@ -21,25 +22,10 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 mainFrame.BackgroundTransparency = 0.5
 mainFrame.Parent = game.Players.LocalPlayer.PlayerGui
 
--- Create a header frame
-local headerFrame = Instance.new("Frame")
-headerFrame.Size = UDim2.new(1, 0, 0, 30)
-headerFrame.Position = UDim2.new(0, 0, 0, 0)
-headerFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-headerFrame.Parent = mainFrame
-
--- Create the header text
-local header = Instance.new("TextLabel")
-header.Text = "Header Text Here"
-header.TextColor3 = Color3.fromRGB(255, 255, 255)
-header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-header.Size = UDim2.new(1, 0, 1, 0)
-header.Parent = headerFrame
-
--- Create a scrollable frame for the content
+-- Create a scrollable frame for the content (no header)
 local scrollFrame = Instance.new("ScrollingFrame")
 scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-scrollFrame.Position = UDim2.new(0, 0, 0, headerFrame.Size.Y.Offset)
+scrollFrame.Position = UDim2.new(0, 0, 0, 0)
 scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
 scrollFrame.BackgroundTransparency = 1
 scrollFrame.Parent = mainFrame
@@ -48,36 +34,6 @@ local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 5)
 UIListLayout.Parent = scrollFrame
-
--- Create drag functionality for the header
-local dragging
-local dragInput
-local dragStart
-local startPos
-
-local function update(input)
-    local delta = input.Position - dragStart
-    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-headerFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-        input.Changed:Connect(function()
-            if dragging then
-                update(input)
-            end
-        end)
-    end
-end)
-
-headerFrame.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
 
 -- Toggle listener
 local listenerActive = false
@@ -142,7 +98,7 @@ local function createScrollGUI()
 
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 30)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
     scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.Parent = frame
