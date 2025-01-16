@@ -96,6 +96,9 @@ local function createScrollGUI()
     draggableBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red bar to indicate draggable area
     draggableBar.Parent = frame
 
+    -- Make sure the draggable bar is always in front
+    draggableBar.ZIndex = 2
+
     -- Handle dragging for the entire frame (no separate bar)
     draggableBar.InputBegan:Connect(function(input, gameProcessed)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
