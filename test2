@@ -21,6 +21,7 @@ local Section = MainTab:CreateSection("Section Example")
 -- Variable to track listener state
 local listenerActive = false
 local scrollFrame
+local clickConnection
 
 -- Function to get the object path excluding 'Ugc' and using [" "] for special characters
 local function getObjectPath(obj)
@@ -101,8 +102,7 @@ end
 
 -- Function to listen for mouse clicks and print the object path to the scrollable GUI
 local function listenForClicks()
-    local connection
-    connection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
+    clickConnection = game:GetService("UserInputService").InputBegan:Connect(function(input, gameProcessed)
         -- Ensure the input is from the mouse and not processed by other UI
         if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
             local mouse = game.Players.LocalPlayer:GetMouse()
@@ -114,8 +114,6 @@ local function listenForClicks()
             end
         end
     end)
-    
-    return connection
 end
 
 -- Toggle control to start/stop the listener
@@ -132,11 +130,10 @@ local Toggle = MainTab:CreateToggle({
             listenForClicks()
             print("Listener started.")
         else
-            -- Clear the GUI and stop the listener if toggle is false
-            if scrollFrame then
-                for _, child in ipairs(scrollFrame:GetChildren()) do
-                    child:Destroy()  -- Remove all previous text boxes
-                end
+            -- Stop the listener if toggle is false
+            if clickConnection then
+                clickConnection:Disconnect()
+                clickConnection = nil
             end
             listenerActive = false
             print("Listener stopped.")
