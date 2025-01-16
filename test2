@@ -18,13 +18,11 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("Tab Example", 4483362458)
 local Section = MainTab:CreateSection("Section Example")
 
--- Variable to track listener state
+-- Variables for listener state and GUI
 local listenerActive = false
 local scrollFrame
 local clickConnection
 local screenGui -- Variable to store the screen GUI for easy removal
-local dragging = false
-local dragInput, dragStart, startPos
 
 -- Function to get the object path excluding 'Ugc' and using [" "] for special characters
 local function getObjectPath(obj)
@@ -90,41 +88,10 @@ local function createScrollGUI()
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
 
-    -- Create the draggable bar
-    local draggableBar = Instance.new("Frame")
-    draggableBar.Size = UDim2.new(1, 0, 0, 30)  -- Make the bar span the top of the window
-    draggableBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red bar to indicate draggable area
-    draggableBar.Parent = frame
-
-    -- Make sure the draggable bar is always in front
-    draggableBar.ZIndex = 2
-
-    -- Handle dragging for the entire frame (no separate bar)
-    draggableBar.InputBegan:Connect(function(input, gameProcessed)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-        end
-    end)
-
-    draggableBar.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    draggableBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-
     -- Create the scroll frame for paths
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 30)  -- Make space for draggable bar
+    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
     scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.Parent = frame
@@ -183,3 +150,30 @@ end
 
 -- Initial creation of the GUI
 initializeGUI()
+
+-- Add a draggable feature to the frame
+local frame = screenGui:FindFirstChild("Frame")
+local dragging = false
+local dragStart = nil
+local startPos = nil
+
+frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = frame.Position
+    end
+end)
+
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+    if dragging then
+        local delta = input.Position - dragStart
+        frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+
+frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
