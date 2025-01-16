@@ -118,9 +118,10 @@ local function createScrollGUI()
         end
     end)
 
+    -- Adjust scroll frame position to avoid overlap
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 30)  -- Position below the header
+    scrollFrame.Position = UDim2.new(0, 0, 0, header.Size.Y.Offset)  -- Position below the header dynamically
     scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.Parent = frame
