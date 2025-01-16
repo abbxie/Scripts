@@ -93,7 +93,7 @@ local function createScrollGUI()
     -- Create the draggable bar
     local draggableBar = Instance.new("Frame")
     draggableBar.Size = UDim2.new(1, 0, 0, 30)  -- Make the bar span the top of the window
-    draggableBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+    draggableBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red bar to indicate draggable area
     draggableBar.Parent = frame
 
     -- Handle dragging for the entire frame (no separate bar)
