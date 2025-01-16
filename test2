@@ -87,6 +87,7 @@ local function createScrollGUI()
     header.TextColor3 = Color3.fromRGB(255, 255, 255)
     header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     header.Size = UDim2.new(1, 0, 0, 30)  -- Header size
+    header.Position = UDim2.new(0, 0, 0, 0)  -- Ensure header is at the top
     header.Parent = screenGui
 
     -- Adjust frame position to account for header space
