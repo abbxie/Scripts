@@ -9,7 +9,7 @@ local Window = Rayfield:CreateWindow({
     LoadingSubtitle = "by Sirius",
     ConfigurationSaving = {
         Enabled = true,
-        FolderName = nil, 
+        FolderName = nil, -- Specify a folder name if needed
         FileName = "Big Hub"
     }
 })
@@ -81,7 +81,6 @@ local function createScrollGUI()
     screenGui = Instance.new("ScreenGui")
     screenGui.Parent = player.PlayerGui
 
-    -- Create frame for the entire GUI
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0.4, 0, 0.6, 0)  -- Adjust size as necessary
     frame.Position = UDim2.new(0.3, 0, 0.2, 0)  -- Adjust position as necessary
@@ -89,20 +88,15 @@ local function createScrollGUI()
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
 
-    -- Create header as part of the frame
+    -- Create the draggable header
     local header = Instance.new("TextLabel")
     header.Text = "Header Text Here"
     header.TextColor3 = Color3.fromRGB(255, 255, 255)
     header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    header.Size = UDim2.new(1, 0, 0, 30)  -- Header size
-    header.Position = UDim2.new(0, 0, 0, 0)  -- Place header at top of frame
+    header.Size = UDim2.new(1, 0, 0, 30)
     header.Parent = frame
 
-    -- Make the header draggable
-    local dragging = false
-    local dragInput, dragStart, startPos
-
-    -- Function to handle dragging
+    local dragging, dragStart, startPos
     header.InputBegan:Connect(function(input, gameProcessed)
         if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
             dragging = true
@@ -124,11 +118,10 @@ local function createScrollGUI()
         end
     end)
 
-    -- Create scrollable content below the header
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 30)  -- Offset by header height
-    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)
+    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
+    scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.Parent = frame
 
@@ -183,4 +176,4 @@ local Toggle = MainTab:CreateToggle({
 })
 
 -- Make sure the Rayfield window is open and functional
-Window:Render()
+Window:Render()  -- This ensures that the window is rendered
