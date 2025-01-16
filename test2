@@ -88,9 +88,40 @@ local function createScrollGUI()
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
 
+    -- Create the draggable header
+    local header = Instance.new("TextLabel")
+    header.Text = "Header Text Here"
+    header.TextColor3 = Color3.fromRGB(255, 255, 255)
+    header.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    header.Size = UDim2.new(1, 0, 0, 30)
+    header.Parent = frame
+
+    local dragging, dragStart, startPos
+    header.InputBegan:Connect(function(input, gameProcessed)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    header.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    header.InputChanged:Connect(function(input)
+        if dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Adjust scroll frame position to avoid overlap
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
-    scrollFrame.Position = UDim2.new(0, 0, 0, 0)
+    scrollFrame.Position = UDim2.new(0, 0, 0, header.Size.Y.Offset)  -- Position below the header dynamically
     scrollFrame.CanvasSize = UDim2.new(0, 0, 10, 0)  -- Large enough canvas for scrolling
     scrollFrame.BackgroundTransparency = 1
     scrollFrame.Parent = frame
@@ -131,4 +162,19 @@ local Toggle = MainTab:CreateToggle({
             listenForClicks()
             print("Listener started.")
         else
-            -- Stop the listener
+            -- Stop the listener and remove the GUI if toggle is false
+            if clickConnection then
+                clickConnection:Disconnect()
+                clickConnection = nil
+            end
+            listenerActive = false
+            if screenGui then
+                screenGui:Destroy()  -- Remove the GUI when listener is stopped
+            end
+            print("Listener stopped and GUI closed.")
+        end
+    end,
+})
+
+-- Make sure the Rayfield window is open and functional
+Window:Render()  -- This ensures that the window is rendered
