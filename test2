@@ -1,4 +1,3 @@
--- Load Rayfield library
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 print("Rayfield loaded successfully")
 
@@ -22,7 +21,7 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 mainFrame.BackgroundTransparency = 0.5
 mainFrame.Parent = game.Players.LocalPlayer.PlayerGui
 
--- Create a header frame (fixed position, draggable)
+-- Create a header frame
 local headerFrame = Instance.new("Frame")
 headerFrame.Size = UDim2.new(1, 0, 0, 30)
 headerFrame.Position = UDim2.new(0, 0, 0, 0)
@@ -50,7 +49,7 @@ UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 UIListLayout.Padding = UDim.new(0, 5)
 UIListLayout.Parent = scrollFrame
 
--- Drag functionality for the header
+-- Create drag functionality for the header
 local dragging
 local dragInput
 local dragStart
