@@ -98,6 +98,32 @@ local function createScrollGUI()
     header.Position = UDim2.new(0, 0, 0, 0)  -- Place header at top of frame
     header.Parent = frame
 
+    -- Make the header draggable
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    -- Function to handle dragging
+    header.InputBegan:Connect(function(input, gameProcessed)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 and not gameProcessed then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    header.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
+    header.InputChanged:Connect(function(input)
+        if dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
     -- Create scrollable content below the header
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
