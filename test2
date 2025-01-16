@@ -88,6 +88,32 @@ local function createScrollGUI()
     frame.BackgroundTransparency = 0.5
     frame.Parent = screenGui
 
+    -- Make the frame draggable
+    local dragging = false
+    local dragStart = nil
+    local startPos = nil
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    frame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+
     scrollFrame = Instance.new("ScrollingFrame")
     scrollFrame.Size = UDim2.new(1, 0, 1, 0)
     scrollFrame.Position = UDim2.new(0, 0, 0, 0)
