@@ -139,3 +139,10 @@ local Toggle = MainTab:CreateToggle({
         end
     end,
 })
+
+local Button = MainTab:CreateButton({
+   Name = "Button Example",
+   Callback = function()
+   loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Player%20Position'))() 
+   end,
+})
