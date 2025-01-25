@@ -1,0 +1,141 @@
+-- Load Rayfield library
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+-- Create the window with Rayfield
+local Window = Rayfield:CreateWindow({
+    Name = "GUI Control",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = false,
+        FolderName = nil,
+        FileName = "GUIControl"
+    }
+})
+
+-- Create a tab for GUI control
+local MainTab = Window:CreateTab("GUI Control") -- Tab for GUI control
+local Section = MainTab:CreateSection("Teleport and SleepService")
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- Toggle for enabling TeleportGui
+local TeleportGuiToggle = MainTab:CreateToggle({
+    Name = "Enable TeleportGui",
+    CurrentValue = false, -- Default is off
+    Flag = "TeleportGuiToggle", -- Unique identifier
+    Callback = function(Value)
+        local teleportGui = LocalPlayer.PlayerGui:FindFirstChild("TeleportGui")
+        if teleportGui then
+            teleportGui.Enabled = Value
+        end
+    end,
+})
+
+-- Button for disabling SleepService
+local DisableSleepServiceButton = MainTab:CreateButton({
+    Name = "Disable SleepService",
+    Callback = function()
+        local sleepService = LocalPlayer.PlayerGui:FindFirstChild("GeneralConfigurations")
+        if sleepService and sleepService:FindFirstChild("SleepService") then
+            sleepService.SleepService.Enabled = false
+        end
+    end,
+})
+
+-- Variables for the GUI
+local screenGui = nil
+local textLabel = nil
+local updateConnection = nil
+
+-- Function to make the TextLabel draggable
+local function makeDraggable(frame)
+    local dragging = false
+    local dragInput, dragStart, startPos
+
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then
+            dragInput = input
+        end
+    end)
+
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(
+                startPos.X.Scale,
+                startPos.X.Offset + delta.X,
+                startPos.Y.Scale,
+                startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
+-- Function to create the GUI and start updating the text
+local function createAndRunGui()
+    local player = game.Players.LocalPlayer
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Parent = player:WaitForChild("PlayerGui")
+
+    -- Create the TextLabel
+    textLabel = Instance.new("TextLabel")
+    textLabel.Size = UDim2.new(0, 400, 0, 50)  -- Set size of the label
+    textLabel.Position = UDim2.new(0.5, -200, 0.5, -25)  -- Center the label on the screen
+    textLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)  -- Opaque background
+    textLabel.BackgroundTransparency = 0
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+    textLabel.TextSize = 20
+    textLabel.Parent = screenGui
+
+    -- Make the TextLabel draggable
+    makeDraggable(textLabel)
+
+    -- Function to update the text every 0.001 seconds
+    updateConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        local textLabelObj = workspace.CastleActiveStages.CastleStageVisible.CastleStage2.CastleInteractions.CastleBoards.ServerAwardBoards:GetChildren()[2].SessionBoardGuiPart.AwardSessionBoardSurfaceGui.Container.DescriptionContainer.TimeRemainingTextLabel
+        textLabel.Text = textLabelObj.Text  -- Update the text
+    end)
+end
+
+-- Function to destroy the GUI and stop updating
+local function destroyGui()
+    if screenGui then
+        screenGui:Destroy()
+        screenGui = nil
+        textLabel = nil
+    end
+    if updateConnection then
+        updateConnection:Disconnect()
+        updateConnection = nil
+    end
+end
+
+-- Create a toggle in the Rayfield interface
+local Toggle = MainTab:CreateToggle({
+    Name = "Toggle GUI",
+    CurrentValue = false,
+    Flag = "Toggle1", -- Unique identifier
+    Callback = function(Value)
+        if Value then
+            createAndRunGui()  -- Create and run the GUI when the toggle is on
+        else
+            destroyGui()  -- Destroy the GUI when the toggle is off
+        end
+    end,
+})
