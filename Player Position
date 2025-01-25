@@ -1,0 +1,12 @@
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+
+-- Get the player's position
+local position = tostring(humanoidRootPart.Position)
+
+-- Print the position to the output
+print("Player's Position: " .. position)
+
+-- Copy the position to the clipboard
+setclipboard(position)
