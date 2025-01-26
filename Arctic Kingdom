@@ -87,6 +87,26 @@ local function makeDraggable(frame)
     end)
 end
 
+-- Function to handle player actions
+local function handlePlayerActions()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    -- Make the player jump
+    humanoid.Jump = true
+    wait(5)  -- Wait 5 seconds
+
+    -- Teleport the player
+    character:SetPrimaryPartCFrame(CFrame.new(-349.7998962402344, -57.600006103515625, 320.2999572753906))
+    wait(5)  -- Wait another 5 seconds
+
+    -- Walk to the final position
+    local destination = Vector3.new(-391.90948486328125, -57.349998474121094, 317.8500061035156)
+    humanoid:MoveTo(destination)
+    humanoid.MoveToFinished:Wait()  -- Wait until the player reaches the destination
+end
+
 -- Function to create the GUI and start updating the text
 local function createAndRunGui()
     local player = game.Players.LocalPlayer
@@ -106,10 +126,16 @@ local function createAndRunGui()
     -- Make the TextLabel draggable
     makeDraggable(textLabel)
 
-    -- Function to update the text every 0.001 seconds
+    -- Function to update the text every frame
     updateConnection = game:GetService("RunService").RenderStepped:Connect(function()
         local textLabelObj = workspace.CastleActiveStages.CastleStageVisible.CastleStage2.CastleInteractions.CastleBoards.ServerAwardBoards:GetChildren()[2].SessionBoardGuiPart.AwardSessionBoardSurfaceGui.Container.DescriptionContainer.TimeRemainingTextLabel
         textLabel.Text = textLabelObj.Text  -- Update the text
+
+        -- Check if the time reaches "0s"
+        if textLabelObj.Text == "0s" then
+            updateConnection:Disconnect()  -- Stop updating to prevent repeated triggers
+            handlePlayerActions()  -- Execute player actions
+        end
     end)
 end
 
@@ -139,6 +165,7 @@ local Toggle = MainTab:CreateToggle({
         end
     end,
 })
+
 
 local Button = MainTab:CreateButton({
    Name = "Button Example",
