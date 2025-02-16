@@ -17,7 +17,7 @@ local Section = MainTab:CreateSection("AutoFarm")
 
 
 local locations = {
-    "SPAWN", "Autumn Forest", "Flower Garden", "Snow Forest", "Tropical Palms",
+    "SPAWN", "Snow Forest", "Autumn Forest", "Flower Garden", "Tropical Palms",
     "Mine Shaft", "Diamond Mine", "Magical Forest", "Sakura Forest", "Sakura Ravine",
     "Magma Ravine", "Cloud Road", "Heaven", "Toxic Wasteland", "Sandy Star Bay",
     "EVENT", "Heart Forest", "Green Heart Forest", "Blue Heart Forest"
@@ -30,20 +30,13 @@ for _, location in ipairs(locations) do
         CurrentValue = false, -- Default value for the toggle (off)
         Flag = "Toggle_" .. location, -- Unique flag for each toggle
         Callback = function(Value)
-            -- Check if the location is "SPAWN"
-            local locationObject
-            if location == "SPAWN" then
-                locationObject = workspace.LocalStars.SPAWN
-            else
-                locationObject = workspace.LocalStars[location]  -- For other locations
-            end
-
-            -- If the toggle is on, start the remote call loop
+            -- If the toggle is on, start looping the remote call
             if Value then
-                -- Start the while loop to keep sending remote calls as long as the toggle is on
-                while Toggle.Value do
+                while Value do
+                    local targetLocation = location == "SPAWN" and workspace.LocalStars.SPAWN or workspace.LocalStars[location]
+                    
                     -- Loop through each child of the current location
-                    for _, child in ipairs(locationObject:GetChildren()) do
+                    for _, child in ipairs(targetLocation:GetChildren()) do
                         local args = {
                             [1] = location,        -- Current location
                             [2] = child.Name       -- Name of the child as the second argument
@@ -53,16 +46,17 @@ for _, location in ipairs(locations) do
                         game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
 
                         -- Wait a short time before sending the next remote call
-                        wait(0.5)  -- Adjust the wait time as needed
+                        wait()  -- Adjust the wait time as needed (e.g., 0.5 seconds)
                     end
+
+                    -- Wait a short time before continuing the loop (to avoid too many rapid calls)
+                    wait()  -- Adjust this as needed (e.g., 1 second)
                 end
-            else
-                -- If the toggle is off, stop the loop for this location
-                print(location .. " toggle is off, remote calls stopped.")
             end
         end,
     })
 end
+
 
 
 local MainTab = Window:CreateTab("Eggs", 4483362458) -- Title, Image
