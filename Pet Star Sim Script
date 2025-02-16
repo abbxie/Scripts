@@ -17,7 +17,7 @@ local Section = MainTab:CreateSection("AutoFarm")
 
 
 local locations = {
-    "SPAWN", "Snow Forest", "Autumn Forest", "Flower Garden", "Tropical Palms",
+    "SPAWN", "Autumn Forest", "Flower Garden", "Snow Forest", "Tropical Palms",
     "Mine Shaft", "Diamond Mine", "Magical Forest", "Sakura Forest", "Sakura Ravine",
     "Magma Ravine", "Cloud Road", "Heaven", "Toxic Wasteland", "Sandy Star Bay",
     "EVENT", "Heart Forest", "Green Heart Forest", "Blue Heart Forest"
