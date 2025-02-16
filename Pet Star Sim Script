@@ -1,0 +1,483 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
+print("Rayfield loaded successfully")
+
+local Window = Rayfield:CreateWindow({
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil, -- Specify a folder name if needed
+        FileName = "Big Hub"
+    }
+})
+
+local MainTab = Window:CreateTab("AutoFarm", 4483362458) -- Title, Image
+local Section = MainTab:CreateSection("Overworld")
+
+
+local Toggle = MainTab:CreateToggle({
+    Name = "Spawn",
+    CurrentValue = false,
+    Flag = "Toggle1",
+    Callback = function(Value)
+        running = Value -- Set running to true when toggled on, false when toggled off
+        
+        if running then
+            -- Start loop in a separate coroutine
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars.SPAWN:GetChildren()) do
+                        local args = {
+                            [1] = "SPAWN",
+                            [2] = child.Name -- Just the number as a string
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local Toggle = MainTab:CreateToggle({
+    Name = "Autumn Forest",
+    CurrentValue = false,
+    Flag = "Toggle2",
+    Callback = function(Value)
+        running = Value -- Set running to true when toggled on, false when toggled off
+        
+        if running then
+            -- Start loop in a separate coroutine
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Autumn Forest"]:GetChildren()) do
+                        local args = {
+                            [1] = "Autumn Forest", -- Change to match the new area
+                            [2] = child.Name -- Just the number as a string
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local Toggle = MainTab:CreateToggle({
+    Name = "Flower Garden",
+    CurrentValue = false,
+    Flag = "Toggle1",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Flower Garden"]:GetChildren()) do
+                        local args = {
+                            [1] = "Flower Garden",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local Toggle = MainTab:CreateToggle({
+    Name = "Snow Forest",
+    CurrentValue = false,
+    Flag = "Toggle1",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Snow Forest"]:GetChildren()) do
+                        local args = {
+                            [1] = "Snow Forest",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local TropicalPalmsToggle = MainTab:CreateToggle({
+    Name = "Tropical Palms",
+    CurrentValue = false,
+    Flag = "ToggleTropicalPalms",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Tropical Palms"]:GetChildren()) do
+                        local args = {
+                            [1] = "Tropical Palms",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local MineShaftToggle = MainTab:CreateToggle({
+    Name = "Mine Shaft",
+    CurrentValue = false,
+    Flag = "ToggleMineShaft",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Mine Shaft"]:GetChildren()) do
+                        local args = {
+                            [1] = "Mine Shaft",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local DiamondMineToggle = MainTab:CreateToggle({
+    Name = "Diamond Mine",
+    CurrentValue = false,
+    Flag = "ToggleDiamondMine",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Diamond Mine"]:GetChildren()) do
+                        local args = {
+                            [1] = "Diamond Mine",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local MagicalForestToggle = MainTab:CreateToggle({
+    Name = "Magical Forest",
+    CurrentValue = false,
+    Flag = "ToggleMagicalForest",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Magical Forest"]:GetChildren()) do
+                        local args = {
+                            [1] = "Magical Forest",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local SakuraForestToggle = MainTab:CreateToggle({
+    Name = "Sakura Forest",
+    CurrentValue = false,
+    Flag = "ToggleSakuraForest",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Sakura Forest"]:GetChildren()) do
+                        local args = {
+                            [1] = "Sakura Forest",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local SakuraRavineToggle = MainTab:CreateToggle({
+    Name = "Sakura Ravine",
+    CurrentValue = false,
+    Flag = "ToggleSakuraRavine",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Sakura Ravine"]:GetChildren()) do
+                        local args = {
+                            [1] = "Sakura Ravine",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local MagmaRavineToggle = MainTab:CreateToggle({
+    Name = "Magma Ravine",
+    CurrentValue = false,
+    Flag = "ToggleMagmaRavine",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Magma Ravine"]:GetChildren()) do
+                        local args = {
+                            [1] = "Magma Ravine",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local CloudRoadToggle = MainTab:CreateToggle({
+    Name = "Cloud Road",
+    CurrentValue = false,
+    Flag = "ToggleCloudRoad",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Cloud Road"]:GetChildren()) do
+                        local args = {
+                            [1] = "Cloud Road",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local HeavenToggle = MainTab:CreateToggle({
+    Name = "Heaven",
+    CurrentValue = false,
+    Flag = "ToggleHeaven",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Heaven"]:GetChildren()) do
+                        local args = {
+                            [1] = "Heaven",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local ToxicWastelandToggle = MainTab:CreateToggle({
+    Name = "Toxic Wasteland",
+    CurrentValue = false,
+    Flag = "ToggleToxicWasteland",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Toxic Wasteland"]:GetChildren()) do
+                        local args = {
+                            [1] = "Toxic Wasteland",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local SandyStarBayToggle = MainTab:CreateToggle({
+    Name = "Sandy Star Bay",
+    CurrentValue = false,
+    Flag = "ToggleSandyStarBay",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Sandy Star Bay"]:GetChildren()) do
+                        local args = {
+                            [1] = "Sandy Star Bay",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local Section = MainTab:CreateSection("Event")
+
+local EventToggle = MainTab:CreateToggle({
+    Name = "EVENT",
+    CurrentValue = false,
+    Flag = "ToggleEvent",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars.EVENT:GetChildren()) do
+                        local args = {
+                            [1] = "EVENT",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local HeartForestToggle = MainTab:CreateToggle({
+    Name = "Heart Forest",
+    CurrentValue = false,
+    Flag = "ToggleHeartForest",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Heart Forest"]:GetChildren()) do
+                        local args = {
+                            [1] = "Heart Forest",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+local BlueHeartForestToggle = MainTab:CreateToggle({
+    Name = "Blue Heart Forest",
+    CurrentValue = false,
+    Flag = "ToggleBlueHeartForest",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Blue Heart Forest"]:GetChildren()) do
+                        local args = {
+                            [1] = "Blue Heart Forest",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+
+local GreenHeartForestToggle = MainTab:CreateToggle({
+    Name = "Green Heart Forest",
+    CurrentValue = false,
+    Flag = "ToggleGreenHeartForest",
+    Callback = function(Value)
+        running = Value
+        
+        if running then
+            task.spawn(function()
+                while running do
+                    for _, child in ipairs(workspace.LocalStars["Green Heart Forest"]:GetChildren()) do
+                        local args = {
+                            [1] = "Green Heart Forest",
+                            [2] = child.Name
+                        }
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        wait()
+                    end
+                end
+            end)
+        end
+    end,
+})
+
+
+
+
+
