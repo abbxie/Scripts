@@ -38,20 +38,23 @@ for _, location in ipairs(locations) do
                 locationObject = workspace.LocalStars[location]  -- For other locations
             end
 
-            -- If the toggle is on, start looping the remote call
+            -- If the toggle is on, start the remote call loop
             if Value then
-                -- Loop through each child of the current location
-                for _, child in ipairs(locationObject:GetChildren()) do
-                    local args = {
-                        [1] = location,        -- Current location
-                        [2] = child.Name       -- Name of the child as the second argument
-                    }
+                -- Start the while loop to keep sending remote calls as long as the toggle is on
+                while Toggle.Value do
+                    -- Loop through each child of the current location
+                    for _, child in ipairs(locationObject:GetChildren()) do
+                        local args = {
+                            [1] = location,        -- Current location
+                            [2] = child.Name       -- Name of the child as the second argument
+                        }
 
-                    -- Fire the server with the updated args
-                    game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        -- Fire the server with the updated args
+                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
 
-                    -- Wait a short time before sending the next remote call
-                    wait()  -- Adjust the wait time as needed (e.g., 0.5 seconds)
+                        -- Wait a short time before sending the next remote call
+                        wait(0.5)  -- Adjust the wait time as needed
+                    end
                 end
             else
                 -- If the toggle is off, stop the loop for this location
@@ -60,6 +63,7 @@ for _, location in ipairs(locations) do
         end,
     })
 end
+
 
 local MainTab = Window:CreateTab("Eggs", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Eggs")
