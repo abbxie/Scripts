@@ -154,11 +154,14 @@ local Toggle = MainTab:CreateToggle({
    end,
 })
 
-local MainTab = Window:CreateTab("Potions", 4483362458) -- Title, Image
+local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Section Example")
 
 -- Define potions
 local potions = {"Stars", "Luck", "Gems", "XP"}
+
+-- Boolean to track if the potion loop should run
+local shouldRunLoop = false
 
 -- Create the toggle for activating/deactivating the loop
 local Toggle = MainTab:CreateToggle({
@@ -166,9 +169,11 @@ local Toggle = MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "Toggle1", -- A flag is the identifier for the configuration file
     Callback = function(Value)
-        if Value then
+        shouldRunLoop = Value -- Set the flag to whether the toggle is on or off
+
+        if shouldRunLoop then
             -- Start using potions when toggle is on
-            while Toggle:GetValue() do
+            while shouldRunLoop do
                 -- Use the potions in the list
                 for _, potion in ipairs(potions) do
                     for i = 1, 4 do
@@ -190,7 +195,7 @@ local Toggle = MainTab:CreateToggle({
                 end
                 
                 -- Optional: add a small delay to prevent spamming requests too quickly
-                wait(1) -- Delay in seconds before running again
+                wait() -- Delay in seconds before running again
             end
         end
     end,
