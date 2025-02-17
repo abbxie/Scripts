@@ -195,7 +195,7 @@ local Toggle = MainTab:CreateToggle({
                 end
                 
                 -- Optional: add a small delay to prevent spamming requests too quickly
-                wait() -- Delay in seconds before running again
+                wait(0.1) -- Delay in seconds before running again
             end
         end
     end,
