@@ -1,3 +1,4 @@
+--loadstring(game:HttpGet('https://raw.githubusercontent.com/abbxie/Scripts/refs/heads/main/Pet%20Star%20Sim%20Script'))() 
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))() -- Load Rayfield library
 print("Rayfield loaded successfully")
 
