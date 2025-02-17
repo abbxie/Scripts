@@ -154,14 +154,11 @@ local Toggle = MainTab:CreateToggle({
    end,
 })
 
-local MainTab = Window:CreateTab("Tab Example", 4483362458) -- Title, Image
-local Section = MainTab:CreateSection("Section Example")
+local MainTab = Window:CreateTab("Potions", 4483362458) -- Title, Image
+local Section = MainTab:CreateSection("Potion Section")
 
 -- Define potions
 local potions = {"Stars", "Luck", "Gems", "XP"}
-
--- Boolean to track if the potion loop should run
-local shouldRunLoop = false
 
 -- Create the toggle for activating/deactivating the loop
 local Toggle = MainTab:CreateToggle({
@@ -169,33 +166,31 @@ local Toggle = MainTab:CreateToggle({
     CurrentValue = false,
     Flag = "Toggle1", -- A flag is the identifier for the configuration file
     Callback = function(Value)
-        shouldRunLoop = Value -- Set the flag to whether the toggle is on or off
-
-        if shouldRunLoop then
+        if Value then
             -- Start using potions when toggle is on
-            while shouldRunLoop do
+            while Value do
                 -- Use the potions in the list
                 for _, potion in ipairs(potions) do
                     for i = 1, 4 do
                         local args = {
                             [1] = potion .. " T" .. i;
                         }
-                        
+
                         game:GetService("ReplicatedStorage"):WaitForChild("Core", 9e9):WaitForChild("Remote", 9e9):WaitForChild("usePotion", 9e9):InvokeServer(unpack(args))
                     end
                 end
-                
+
                 -- Use the "Treasure Hunter" potions
                 for i = 1, 2 do
                     local args = {
                         [1] = "Treasure Hunter T" .. i;
                     }
-                    
+
                     game:GetService("ReplicatedStorage"):WaitForChild("Core", 9e9):WaitForChild("Remote", 9e9):WaitForChild("usePotion", 9e9):InvokeServer(unpack(args))
                 end
-                
+
                 -- Optional: add a small delay to prevent spamming requests too quickly
-                wait(0.1) -- Delay in seconds before running again
+                wait() -- Delay in seconds before running again
             end
         end
     end,
