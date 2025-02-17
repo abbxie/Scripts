@@ -195,3 +195,52 @@ local Toggle = MainTab:CreateToggle({
         end
     end,
 })
+
+local MainTab = Window:CreateTab("Misc", 4483362458) -- Title, Image
+local Section = MainTab:CreateSection("Gift Claiming")
+
+local isLooping = false  -- Boolean to track if the loop should run
+
+-- Create the toggle for activating/deactivating the loop
+local Toggle = MainTab:CreateToggle({
+    Name = "Claim Gifts Toggle",
+    CurrentValue = false,
+    Flag = "ClaimGiftToggle", -- A flag is the identifier for the configuration file
+    Callback = function(Value)
+        isLooping = Value  -- Set the loop status based on the toggle value
+
+        if isLooping then
+            -- Start the loop when the toggle is turned on
+            while isLooping do
+                for i = 1, 16 do
+                    local args = {
+                        [1] = i  -- Pass the current index as the argument
+                    }
+
+                    game:GetService("ReplicatedStorage"):WaitForChild("Core", 9e9):WaitForChild("Remote", 9e9):WaitForChild("claimGift", 9e9):InvokeServer(unpack(args))
+                    wait(0.5)  -- Add a small delay to prevent spamming requests
+                end
+            end
+        end
+    end,
+})
+
+local Section = MainTab:CreateSection("Auto Claim Level Road")
+local ToggleLevelRoadClaim = MainTab:CreateToggle({
+    Name = "Claim Level Road Toggle",
+    CurrentValue = false,
+    Flag = "ClaimLevelRoadToggle", -- A flag for this toggle
+    Callback = function(Value)
+        isLevelRoadLooping = Value  -- Set the loop status based on the toggle value
+
+        if isLevelRoadLooping then
+            -- Start the level road claiming loop when the toggle is turned on
+            while isLevelRoadLooping do
+                local args = {}  -- Define the arguments (if you need to customize it, add values here)
+
+                game:GetService("ReplicatedStorage"):WaitForChild("Core", 9e9):WaitForChild("Remote", 9e9):WaitForChild("claimLevelRoad", 9e9):InvokeServer(unpack(args))
+                wait(0.5)  -- Adjust the wait time as needed
+            end
+        end
+    end,
+})
