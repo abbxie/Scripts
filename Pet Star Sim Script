@@ -93,6 +93,20 @@ for _, egg in pairs(workspace.EggModels:GetChildren()) do
         end,
     })
 end
+local Section = MainTab:CreateSection("Remove hatching animation")
+local ToggleDeleteFrame = MainTab:CreateToggle({
+   Name = "Remove Hatching Frame",
+   CurrentValue = false,
+   Flag = "DeleteHatchingFrameToggle",
+   Callback = function(Value)
+       if Value then
+           local hatchingFrame = game:GetService("Players").LocalPlayer.PlayerGui.EggSystem:FindFirstChild("HatchingFrame")
+           if hatchingFrame then
+               hatchingFrame:Destroy()
+           end
+       end
+   end,
+})
 local MainTab = Window:CreateTab("Crafting", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Crafting")
 local craftingEnabled = false
