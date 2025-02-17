@@ -154,7 +154,7 @@ local Toggle = MainTab:CreateToggle({
    end,
 })
 
-local MainTab = Window:CreateTab("Potions", 4483362458) -- Title, Image
+local MainTab = Window:CreateTab("Misc", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Potion Section")
 
 -- Define potions
@@ -196,7 +196,6 @@ local Toggle = MainTab:CreateToggle({
     end,
 })
 
-local MainTab = Window:CreateTab("Misc", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Gift Claiming")
 
 local isLooping = false  -- Boolean to track if the loop should run
