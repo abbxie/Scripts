@@ -92,3 +92,49 @@ for _, egg in pairs(workspace.EggModels:GetChildren()) do
         end,
     })
 end
+local MainTab = Window:CreateTab("Crafting", 4483362458) -- Title, Image
+local Section = MainTab:CreateSection("Crafting")
+local craftingEnabled = false
+
+local Toggle = MainTab:CreateToggle({
+   Name = "Auto Craft",
+   CurrentValue = false,
+   Flag = "AutoCraftToggle",
+   Callback = function(Value)
+       craftingEnabled = Value
+       while craftingEnabled do
+           local pets = game:GetService("Players").LocalPlayer.Data.Pets
+           local groupedPets = {}
+
+           for _, pet in pairs(pets:GetChildren()) do
+               local id = pet:FindFirstChild("ID")
+               local locked = pet:FindFirstChild("Locked")
+               local tier = pet:FindFirstChild("Tier")
+
+               if id and id:IsA("StringValue") and 
+                  (not locked or not locked.Value) and 
+                  tier and tier:IsA("NumberValue") and tier.Value == 0 then
+                    
+                   local petType = id.Value  -- Grouping by pet ID value
+                   if not groupedPets[petType] then
+                       groupedPets[petType] = {}
+                   end
+                   table.insert(groupedPets[petType], pet.Name)  -- Store pet instance name
+               end
+           end
+
+           for _, petList in pairs(groupedPets) do
+               while #petList >= 3 and craftingEnabled do
+                   local args = { petList[1], petList[2], petList[3] }
+                   game:GetService("ReplicatedStorage").PetSystem.Remote.CraftPets:InvokeServer(args)
+                   
+                   -- Remove used pets from the list
+                   table.remove(petList, 1)
+                   table.remove(petList, 1)
+                   table.remove(petList, 1)
+               end
+           end
+           wait(1) -- Add a short delay to prevent freezing/crashes
+       end
+   end,
+})
