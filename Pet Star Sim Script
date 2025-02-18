@@ -16,7 +16,6 @@ local Window = Rayfield:CreateWindow({
 local MainTab = Window:CreateTab("AutoFarm", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("AutoFarm")
 
-
 local locations = {
     "SPAWN", "Autumn Forest", "Flower Garden", "Snow Forest", "Tropical Palms",
     "Mine Shaft", "Diamond Mine", "Magical Forest", "Sakura Forest", "Sakura Ravine",
@@ -24,35 +23,42 @@ local locations = {
     "EVENT", "Heart Forest", "Green Heart Forest", "Blue Heart Forest"
 }
 
--- Loop through each location and create a toggle for it
+-- Store toggle states
+local toggleStates = {}
+
 for _, location in ipairs(locations) do
+    toggleStates[location] = false -- Initialize toggle state
+
     local Toggle = MainTab:CreateToggle({
-        Name = location, -- Name of the toggle is the location name
-        CurrentValue = false, -- Default value for the toggle (off)
-        Flag = "Toggle_" .. location, -- Unique flag for each toggle
+        Name = location,
+        CurrentValue = false,
+        Flag = "Toggle_" .. location,
         Callback = function(Value)
-            -- If the toggle is on, start looping the remote call
+            toggleStates[location] = Value -- Update toggle state
+
             if Value then
-                while Value do
-                    local targetLocation = location == "SPAWN" and workspace.LocalStars.SPAWN or workspace.LocalStars[location]
-                    
-                    -- Loop through each child of the current location
-                    for _, child in ipairs(targetLocation:GetChildren()) do
-                        local args = {
-                            [1] = location,        -- Current location
-                            [2] = child.Name       -- Name of the child as the second argument
-                        }
+                task.spawn(function() -- Run in a separate thread
+                    while true do
+                        if not toggleStates[location] then break end -- Break loop if toggle is off
 
-                        -- Fire the server with the updated args
-                        game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+                        local targetLocation = location == "SPAWN" and workspace.LocalStars.SPAWN or workspace.LocalStars[location]
+                        
+                        for _, child in ipairs(targetLocation:GetChildren()) do
+                            if not toggleStates[location] then break end -- Break inner loop immediately
 
-                        -- Wait a short time before sending the next remote call
-                        wait()  -- Adjust the wait time as needed (e.g., 0.5 seconds)
+                            local args = {
+                                [1] = location,
+                                [2] = child.Name
+                            }
+
+                            game:GetService("ReplicatedStorage").Core.Remote.collectStar:FireServer(unpack(args))
+
+                            task.wait() -- Adjust wait time as needed
+                        end
+
+                        task.wait() -- Additional delay to prevent excessive requests
                     end
-
-                    -- Wait a short time before continuing the loop (to avoid too many rapid calls)
-                    wait()  -- Adjust this as needed (e.g., 1 second)
-                end
+                end)
             end
         end,
     })
