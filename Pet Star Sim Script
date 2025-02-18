@@ -69,36 +69,40 @@ end
 local MainTab = Window:CreateTab("Eggs", 4483362458) -- Title, Image
 local Section = MainTab:CreateSection("Eggs")
 
-local selectedEggs = {}  -- Table to store the selected egg names
+local toggleStates = {} -- Store toggle states
 
 for _, egg in pairs(workspace.EggModels:GetChildren()) do
+    toggleStates[egg.Name] = false -- Initialize toggle state
+
     local Toggle = MainTab:CreateToggle({
-        Name = egg.Name, -- Set the name of the toggle to the egg's name
-        CurrentValue = false, -- Default value for the toggle (off)
-        Flag = "Toggle_" .. egg.Name, -- Unique flag based on the egg's name
+        Name = egg.Name,
+        CurrentValue = false,
+        Flag = "Toggle_" .. egg.Name,
         Callback = function(Value)
-            -- Loop or stop based on the toggle value
+            toggleStates[egg.Name] = Value -- Update toggle state
+
             if Value then
-                -- Start looping the remote call
-                while Value do
-                    local args = {
-                        [1] = egg.Name, -- Only one egg name at a time
-                        [2] = "Open All" -- Always include the second argument
-                    }
+                task.spawn(function() -- Run in a separate thread
+                    while true do
+                        if not toggleStates[egg.Name] then break end -- Break loop if toggle is off
 
-                    -- Invoke the server with the updated args
-                    game:GetService("ReplicatedStorage").PetSystem.Remote.Hatch:InvokeServer(unpack(args))
+                        local args = {
+                            [1] = egg.Name,
+                            [2] = "Open All"
+                        }
 
-                    -- Wait a short time before sending the next remote call
-                    wait()  -- Adjust the wait time as needed (e.g., 1 second)
-                end
+                        game:GetService("ReplicatedStorage").PetSystem.Remote.Hatch:InvokeServer(unpack(args))
+
+                        task.wait() -- Adjust the wait time as needed
+                    end
+                end)
             else
-                -- If the toggle is off, stop the loop
                 print(egg.Name .. " toggle is off, remote calls stopped.")
             end
         end,
     })
 end
+
 local Section = MainTab:CreateSection("Remove hatching animation")
 local ToggleDeleteFrame = MainTab:CreateToggle({
    Name = "Remove Hatching Frame",
