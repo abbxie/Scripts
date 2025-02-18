@@ -14,8 +14,41 @@ local Window = Rayfield:CreateWindow({
 })
 
 local MainTab = Window:CreateTab("AutoFarm", 4483362458) -- Title, Image
-local Section = MainTab:CreateSection("AutoFarm")
+local Section = MainTab:CreateSection("Autobuy Zone")
 
+local running = false -- Variable to control the loop
+
+local Toggle = MainTab:CreateToggle({
+    Name = "Toggle Example",
+    CurrentValue = false,
+    Flag = "Toggle1",
+    Callback = function(Value)
+        running = Value -- Update running state
+        if running then
+            while running do
+                for _, location in ipairs({
+                    "SPAWN", "Autumn Forest", "Flower Garden", "Snow Forest", "Tropical Palms",
+                    "Mine Shaft", "Diamond Mine", "Magical Forest", "Sakura Forest", "Sakura Ravine",
+                    "Magma Ravine", "Cloud Road", "Heaven", "Toxic Wasteland", "Sandy Star Bay",
+                    "EVENT", "Heart Forest", "Green Heart Forest", "Blue Heart Forest"
+                }) do
+                    if not running then break end -- Exit loop if toggle is turned off
+                    
+                    local args = { [1] = location }
+                    game:GetService("ReplicatedStorage"):WaitForChild("Core", 9e9)
+                        :WaitForChild("Remote", 9e9)
+                        :WaitForChild("buyLocation", 9e9)
+                        :InvokeServer(unpack(args))
+                    
+                    task.wait() -- Prevents script from freezing; adjust delay as needed
+                end
+            end
+        end
+    end
+})
+
+
+local Section = MainTab:CreateSection("AutoFarm")
 local locations = {
     "SPAWN", "Autumn Forest", "Flower Garden", "Snow Forest", "Tropical Palms",
     "Mine Shaft", "Diamond Mine", "Magical Forest", "Sakura Forest", "Sakura Ravine",
