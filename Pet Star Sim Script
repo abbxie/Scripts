@@ -121,7 +121,7 @@ for _, egg in pairs(workspace.EggModels:GetChildren()) do
 
                         local args = {
                             [1] = egg.Name,
-                            [2] = "Open All"
+                            [2] = "Open x3"
                         }
 
                         game:GetService("ReplicatedStorage").PetSystem.Remote.Hatch:InvokeServer(unpack(args))
