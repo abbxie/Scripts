@@ -66,7 +66,7 @@ local Button = MainTab:CreateButton({
         if inputCount > 0 then
             local args = {
                 [1] = "SetWaterTankAsync";
-                [2] = game:GetService("Workspace"):WaitForChild("ilovesackdeck", 9e9):WaitForChild("Bucket", 9e9);
+                [2] = game:GetService("Workspace"):WaitForChild(game.Players.LocalPlayer.Name, 9e9):WaitForChild("Bucket", 9e9);
             }
 
             for i = 1, inputCount do
