@@ -33,7 +33,7 @@ MainTab:CreateToggle({
                 [2] = false,
                 [3] = true
             }
-            game:GetService("ReplicatedStorage"):GetChildren()[13]:InvokeServer(unpack(args))
+            game:GetService("ReplicatedStorage"):GetChildren()[110]:InvokeServer(unpack(args))
             task.wait()
          end
       end)()
