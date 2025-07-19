@@ -1,0 +1,83 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+print("Rayfield loaded successfully")
+
+local Window = Rayfield:CreateWindow({
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    }
+})
+
+local MainTab = Window:CreateTab("AutoFarm", 4483362458)
+local Section = MainTab:CreateSection("AutoHatch")
+
+local goldenEggEnabled = false
+local diamondEggEnabled = false
+local crackedEggEnabled = false
+
+-- Golden Spotted Egg Toggle
+MainTab:CreateToggle({
+   Name = "Auto Hatch Golden Spotted Egg",
+   CurrentValue = false,
+   Flag = "GoldenEggToggle",
+   Callback = function(Value)
+      goldenEggEnabled = Value
+      coroutine.wrap(function()
+         while goldenEggEnabled do
+            local args = {
+                [1] = "Golden Spotted Egg",
+                [2] = false,
+                [3] = true
+            }
+            game:GetService("ReplicatedStorage"):GetChildren()[13]:InvokeServer(unpack(args))
+            task.wait()
+         end
+      end)()
+   end,
+})
+
+-- Diamond Acorn Egg Toggle
+MainTab:CreateToggle({
+   Name = "Auto Hatch Diamond Acorn Egg",
+   CurrentValue = false,
+   Flag = "DiamondEggToggle",
+   Callback = function(Value)
+      diamondEggEnabled = Value
+      coroutine.wrap(function()
+         while diamondEggEnabled do
+            local args = {
+                [1] = "Diamond Acorn Egg",
+                [2] = false,
+                [3] = true
+            }
+            game:GetService("ReplicatedStorage"):GetChildren()[13]:InvokeServer(unpack(args))
+            task.wait()
+         end
+      end)()
+   end,
+})
+
+-- Cracked Egg Toggle
+MainTab:CreateToggle({
+   Name = "Auto Hatch Cracked Egg",
+   CurrentValue = false,
+   Flag = "CrackedEggToggle",
+   Callback = function(Value)
+      crackedEggEnabled = Value
+      coroutine.wrap(function()
+         while crackedEggEnabled do
+            local args = {
+                [1] = "Cracked Egg",
+                [2] = false,
+                [3] = true
+            }
+            game:GetService("ReplicatedStorage"):GetChildren()[13]:InvokeServer(unpack(args))
+            task.wait()
+         end
+      end)()
+   end,
+})
