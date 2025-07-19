@@ -81,3 +81,21 @@ MainTab:CreateToggle({
       end)()
    end,
 })
+
+MainTab:CreateToggle({
+   Name = "Use Super Lucky",
+   CurrentValue = false,
+   Flag = "SuperLuckyToggle",
+   Callback = function(Value)
+      superLuckyEnabled = Value
+      coroutine.wrap(function()
+         while superLuckyEnabled do
+            local args = {
+                [1] = "Super Lucky"
+            }
+            game:GetService("ReplicatedStorage"):GetChildren()[11]:FireServer(unpack(args))
+            task.wait()
+         end
+      end)()
+   end,
+})
