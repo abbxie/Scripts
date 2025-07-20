@@ -33,7 +33,7 @@ MainTab:CreateToggle({
                 [2] = false,
                 [3] = true
             }
-            game:GetService("ReplicatedStorage"):GetChildren()[110]:InvokeServer(unpack(args))
+            game:GetService("ReplicatedStorage"):GetChildren()[13]:InvokeServer(unpack(args))
             task.wait()
          end
       end)()
@@ -93,7 +93,7 @@ MainTab:CreateToggle({
             local args = {
                 [1] = "Super Lucky"
             }
-            game:GetService("ReplicatedStorage"):GetChildren()[11]:FireServer(unpack(args))
+            game:GetService("ReplicatedStorage"):GetChildren()[13]:FireServer(unpack(args))
             task.wait()
          end
       end)()
