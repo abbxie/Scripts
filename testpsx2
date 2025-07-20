@@ -16,12 +16,10 @@ local MainTab = Window:CreateTab("AutoFarm", 4483362458)
 local Section = MainTab:CreateSection("AutoHatch")
 
 local goldenEggEnabled = false
-local diamondEggEnabled = false
-local crackedEggEnabled = false
-
 local goldenEggIndex = nil
+local goldenIndexPrinted = false
 
--- Golden Spotted Egg Toggle (Modified)
+-- Golden Spotted Egg Toggle (Final version)
 MainTab:CreateToggle({
     Name = "Auto Hatch Golden Spotted Egg",
     CurrentValue = false,
@@ -37,31 +35,29 @@ MainTab:CreateToggle({
                 }
 
                 local children = game:GetService("ReplicatedStorage"):GetChildren()
-                local success = false
 
-                if goldenEggIndex then
-                    success = pcall(function()
-                        children[goldenEggIndex]:InvokeServer(unpack(args))
-                    end)
-                    if success then
-                        print("Used saved remote index:", goldenEggIndex)
-                    else
-                        print("Saved remote index failed:", goldenEggIndex)
-                        goldenEggIndex = nil
-                    end
-                end
-
+                -- If we haven't found the working remote yet, search for it
                 if not goldenEggIndex then
                     for i = 1, math.min(1000, #children) do
-                        success = pcall(function()
+                        local success = pcall(function()
                             children[i]:InvokeServer(unpack(args))
                         end)
                         if success then
                             goldenEggIndex = i
-                            print("Found working remote index:", goldenEggIndex)
+                            if not goldenIndexPrinted then
+                                print(goldenEggIndex)
+                                goldenIndexPrinted = true
+                            end
                             break
                         end
                     end
+                end
+
+                -- If found, use the saved index
+                if goldenEggIndex then
+                    pcall(function()
+                        children[goldenEggIndex]:InvokeServer(unpack(args))
+                    end)
                 end
 
                 task.wait()
