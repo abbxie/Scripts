@@ -93,7 +93,7 @@ MainTab:CreateToggle({
             local args = {
                 [1] = "Super Lucky"
             }
-            game:GetService("ReplicatedStorage"):GetChildren()[13]:FireServer(unpack(args))
+            game:GetService("ReplicatedStorage"):GetChildren()[11]:FireServer(unpack(args))
             task.wait()
          end
       end)()
