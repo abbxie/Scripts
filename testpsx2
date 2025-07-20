@@ -19,7 +19,7 @@ local goldenEggEnabled = false
 local goldenEggIndex = nil
 local goldenIndexPrinted = false
 
--- Golden Spotted Egg Toggle (Final version)
+-- Golden Spotted Egg Toggle (with saved index replacing [110])
 MainTab:CreateToggle({
     Name = "Auto Hatch Golden Spotted Egg",
     CurrentValue = false,
@@ -36,11 +36,10 @@ MainTab:CreateToggle({
 
                 local children = game:GetService("ReplicatedStorage"):GetChildren()
 
-                -- If we haven't found the working remote yet, search for it
                 if not goldenEggIndex then
                     for i = 1, math.min(1000, #children) do
                         local success = pcall(function()
-                            children[i]:InvokeServer(unpack(args))
+                            game:GetService("ReplicatedStorage"):GetChildren()[i]:InvokeServer(unpack(args))
                         end)
                         if success then
                             goldenEggIndex = i
@@ -53,10 +52,9 @@ MainTab:CreateToggle({
                     end
                 end
 
-                -- If found, use the saved index
                 if goldenEggIndex then
                     pcall(function()
-                        children[goldenEggIndex]:InvokeServer(unpack(args))
+                        game:GetService("ReplicatedStorage"):GetChildren()[goldenEggIndex]:InvokeServer(unpack(args))
                     end)
                 end
 
