@@ -17,7 +17,7 @@ local Section = MainTab:CreateSection("AutoHatch")
 
 local goldenEggEnabled = false
 local goldenEggIndex = nil
-local goldenIndexPrinted = false
+local indexFound = false
 
 MainTab:CreateToggle({
     Name = "Auto Hatch Golden Spotted Egg",
@@ -42,18 +42,13 @@ MainTab:CreateToggle({
                         end)
                         if success then
                             goldenEggIndex = i
-                            if not goldenIndexPrinted then
-                                print(goldenEggIndex)
-                                goldenIndexPrinted = true
-                            end
+                            print(i) -- Print index once when found
                             break
                         end
                     end
-                end
-
-                if goldenEggIndex then
+                else
                     pcall(function()
-                        game:GetService("ReplicatedStorage"):GetChildren()[goldenEggIndex]:InvokeServer(unpack(args))
+                        children[goldenEggIndex]:InvokeServer(unpack(args))
                     end)
                 end
 
