@@ -1,43 +1,30 @@
-local goldenEggIndex = nil
-
 local args = {
-    [1] = "Golden Spotted Egg",
-    [2] = false,
-    [3] = true
+    [1] = "Golden Spotted Egg";
+    [2] = false;
+    [3] = true;
 }
 
-local function callGoldenEggRemote()
-    local children = game:GetService("ReplicatedStorage"):GetChildren()
+local repStorage = game:GetService("ReplicatedStorage")
+local children = repStorage:GetChildren()
 
-    if goldenEggIndex then
-        local child = children[goldenEggIndex]
-        local success = pcall(function()
-            child:InvokeServer(unpack(args))
+for i = 1, 200 do
+    local child = children[i]
+    if child then
+        local success, err = pcall(function()
+            if child:IsA("RemoteFunction") then
+                child:InvokeServer(unpack(args))
+            elseif child:IsA("RemoteEvent") then
+                child:FireServer(unpack(args))
+            else
+                error("Not a remote")
+            end
         end)
         if success then
-            print("Used saved remote index:", goldenEggIndex)
-            return true
+            print("Success at index " .. i)
         else
-            print("Saved remote index failed:", goldenEggIndex)
-            goldenEggIndex = nil -- reset if fails
+            print("Error at index " .. i .. ": " .. err)
         end
+    else
+        print("No child at index " .. i)
     end
-
-    for i = 1, math.min(1000, #children) do
-        local child = children[i]
-        local success = pcall(function()
-            child:InvokeServer(unpack(args))
-        end)
-        if success then
-            goldenEggIndex = i
-            print("Found working remote index:", goldenEggIndex)
-            return true
-        end
-    end
-
-    print("No working remote found from 1 to 1000")
-    return false -- no remote worked
 end
-
--- Call the remote (can be looped or triggered as needed)
-callGoldenEggRemote()
