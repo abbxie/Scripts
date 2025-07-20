@@ -1,71 +1,43 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-print("Rayfield loaded successfully")
-
-local Window = Rayfield:CreateWindow({
-    Name = "Rayfield Example Window",
-    LoadingTitle = "Rayfield Interface Suite",
-    LoadingSubtitle = "by Sirius",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "Big Hub"
-    }
-})
-
-local MainTab = Window:CreateTab("AutoFarm", 4483362458)
-local Section = MainTab:CreateSection("AutoHatch")
-
-local goldenEggEnabled = false
-local diamondEggEnabled = false
-local crackedEggEnabled = false
-
 local goldenEggIndex = nil
 
--- Golden Spotted Egg Toggle (Modified)
-MainTab:CreateToggle({
-    Name = "Auto Hatch Golden Spotted Egg",
-    CurrentValue = false,
-    Flag = "GoldenEggToggle",
-    Callback = function(Value)
-        goldenEggEnabled = Value
-        coroutine.wrap(function()
-            while goldenEggEnabled do
-                local args = {
-                    [1] = "Golden Spotted Egg",
-                    [2] = false,
-                    [3] = true
-                }
+local args = {
+    [1] = "Golden Spotted Egg",
+    [2] = false,
+    [3] = true
+}
 
-                local children = game:GetService("ReplicatedStorage"):GetChildren()
-                local success = false
+local function callGoldenEggRemote()
+    local children = game:GetService("ReplicatedStorage"):GetChildren()
 
-                if goldenEggIndex then
-                    success = pcall(function()
-                        children[goldenEggIndex]:InvokeServer(unpack(args))
-                    end)
-                    if success then
-                        print("Used saved remote index:", goldenEggIndex)
-                    else
-                        print("Saved remote index failed:", goldenEggIndex)
-                        goldenEggIndex = nil
-                    end
-                end
+    if goldenEggIndex then
+        local child = children[goldenEggIndex]
+        local success = pcall(function()
+            child:InvokeServer(unpack(args))
+        end)
+        if success then
+            print("Used saved remote index:", goldenEggIndex)
+            return true
+        else
+            print("Saved remote index failed:", goldenEggIndex)
+            goldenEggIndex = nil -- reset if fails
+        end
+    end
 
-                if not goldenEggIndex then
-                    for i = 1, math.min(1000, #children) do
-                        success = pcall(function()
-                            children[i]:InvokeServer(unpack(args))
-                        end)
-                        if success then
-                            goldenEggIndex = i
-                            print("Found working remote index:", goldenEggIndex)
-                            break
-                        end
-                    end
-                end
+    for i = 1, math.min(1000, #children) do
+        local child = children[i]
+        local success = pcall(function()
+            child:InvokeServer(unpack(args))
+        end)
+        if success then
+            goldenEggIndex = i
+            print("Found working remote index:", goldenEggIndex)
+            return true
+        end
+    end
 
-                task.wait()
-            end
-        end)()
-    end,
-})
+    print("No working remote found from 1 to 1000")
+    return false -- no remote worked
+end
+
+-- Call the remote (can be looped or triggered as needed)
+callGoldenEggRemote()
