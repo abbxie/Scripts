@@ -1,32 +1,54 @@
 local player = game.Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local vim = game:GetService("VirtualInputManager")
+local RunService = game:GetService("RunService")
 
 local radius = 15
 local ringAdornment = nil
 local running = true
 
--- Create a horizontal (flat) red ring around the player
-local function drawRing()
+-- Create the ring once and update its position every frame to stay on ground beneath player
+local function createRing()
     if ringAdornment then ringAdornment:Destroy() end
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
 
-    local ring = Instance.new("CylinderHandleAdornment")
-    ring.Adornee = hrp
-    ring.Parent = hrp
-    ring.Radius = radius
-    ring.Height = 0.05
-    ring.Color3 = Color3.fromRGB(255, 0, 0)
-    ring.Transparency = 0.5
-    ring.ZIndex = 1
-    ring.AlwaysOnTop = true
-    ring.Name = "ClickRing"
-    ring.CFrame = CFrame.Angles(math.rad(90), 0, 0) -- rotate flat
-    ringAdornment = ring
+    ringAdornment = Instance.new("CylinderHandleAdornment")
+    ringAdornment.Parent = workspace.Terrain
+    ringAdornment.Radius = radius
+    ringAdornment.Height = 0.05
+    ringAdornment.Color3 = Color3.fromRGB(255, 0, 0)
+    ringAdornment.Transparency = 0.5
+    ringAdornment.ZIndex = 1
+    ringAdornment.AlwaysOnTop = true
+    ringAdornment.Name = "ClickRing"
+
+    RunService.Heartbeat:Connect(function()
+        if not running then return end
+        local char = player.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+
+        -- Raycast down to find ground position
+        local rayOrigin = hrp.Position
+        local rayDirection = Vector3.new(0, -50, 0)
+        local raycastParams = RaycastParams.new()
+        raycastParams.FilterDescendantsInstances = {char}
+        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+        local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
+        local groundPos
+
+        if raycastResult then
+            groundPos = raycastResult.Position
+        else
+            groundPos = Vector3.new(hrp.Position.X, 0, hrp.Position.Z)
+        end
+
+        ringAdornment.CFrame = CFrame.new(groundPos) * CFrame.Angles(math.rad(90), 0, 0)
+    end)
 end
 
--- Simulate click on any child in workspace.Visual.Debris within radius
+-- Continuously click parts in workspace.Visual.Debris within radius
 local function clickNearby()
     while running do
         local char = player.Character
@@ -37,7 +59,7 @@ local function clickNearby()
         local debrisFolder = workspace:FindFirstChild("Visual") and workspace.Visual:FindFirstChild("Debris")
         if debrisFolder then
             for _, obj in ipairs(debrisFolder:GetChildren()) do
-                if obj:IsA("BasePart") and obj.Transparency < 1 then
+                if obj:IsA("BasePart") and obj.Transparency < 1 and obj:IsDescendantOf(workspace) then
                     local dist = (obj.Position - hrp.Position).Magnitude
                     if dist <= radius then
                         local screenPos, onScreen = camera:WorldToViewportPoint(obj.Position)
@@ -50,9 +72,10 @@ local function clickNearby()
                 end
             end
         end
+
         task.wait(0.15)
     end
 end
 
-drawRing()
+createRing()
 task.spawn(clickNearby)
