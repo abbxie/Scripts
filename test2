@@ -1,3 +1,28 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+print("Rayfield loaded successfully")
+
+local Window = Rayfield:CreateWindow({
+    Name = "Rayfield Example Window",
+    LoadingTitle = "Rayfield Interface Suite",
+    LoadingSubtitle = "by Sirius",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Big Hub"
+    }
+})
+
+local MainTab = Window:CreateTab("AutoFarm", 4483362458)
+local Section = MainTab:CreateSection("AutoHatch")
+
+local player = game.Players.LocalPlayer
+local debrisFolder = workspace:FindFirstChild("Visual") and workspace.Visual:FindFirstChild("Debris")
+local camera = workspace.CurrentCamera
+local input = game:GetService("VirtualInputManager")
+
+local running = false
+local tapThread
+
 local function autoTapLoop()
     while running do
         if not debrisFolder then
@@ -49,3 +74,19 @@ local function autoTapLoop()
     end
     print("AutoTap loop stopped.")
 end
+
+local Keybind = MainTab:CreateKeybind({
+    Name = "AutoTap Keybind",
+    CurrentKeybind = "Q",
+    HoldToInteract = false,
+    Flag = "KeybindAutoTap",
+    Callback = function()
+        running = not running
+        if running then
+            print("AutoTap started")
+            tapThread = task.spawn(autoTapLoop)
+        else
+            print("AutoTap stopped")
+        end
+    end,
+})
