@@ -21,53 +21,61 @@ local camera = workspace.CurrentCamera
 local input = game:GetService("VirtualInputManager")
 
 local running = false
+local toggleThread
 
-local Toggle = MainTab:CreateToggle({
-    Name = "AutoTap",
-    CurrentValue = false,
-    Flag = "ToggleAutoTap",
-    Callback = function(Value)
-        running = Value
-        if running then
-            -- Run the loop in a separate task to avoid blocking the UI
-            task.spawn(function()
-                while running do
-                    if not debrisFolder then
-                        warn("workspace.Visual.Debris not found")
-                        task.wait(5)
-                    else
-                        local character = player.Character or player.CharacterAdded:Wait()
-                        local hrp = character:WaitForChild("HumanoidRootPart")
+local function autoTapLoop()
+    while running do
+        if not debrisFolder then
+            warn("workspace.Visual.Debris not found")
+            task.wait(5)
+        else
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
 
-                        for _, child in ipairs(debrisFolder:GetChildren()) do
-                            if not running then break end
-                            if child:IsA("BasePart") and child.Name ~= "Part" and child.Parent == debrisFolder then
-                                -- Teleport above the child
-                                hrp.CFrame = child.CFrame + Vector3.new(0, 3, 0)
-                                task.wait(0.2)
-
-                                -- Convert world position to screen position
-                                local screenPos, onScreen = camera:WorldToViewportPoint(child.Position)
-                                if onScreen then
-                                    -- Simulate mouse click at that screen position
-                                    input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)  -- mouse down
-                                    input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0) -- mouse up
-                                    print("Clicked:", child.Name)
-
-                                    -- Wait until the object is removed or toggle off
-                                    while child.Parent == debrisFolder and running do
-                                        task.wait(0.1)
-                                    end
-                                    print(child.Name .. " removed or toggled off.")
-                                else
-                                    print(child.Name .. " is off-screen.")
-                                end
-                            end
+            for _, child in ipairs(debrisFolder:GetChildren()) do
+                if not running then break end
+                if child:IsA("BasePart") and child.Name ~= "Part" and child.Parent == debrisFolder then
+                    print("Tapping:", child.Name)
+                    -- Repeatedly tap the child until it's gone or toggle off
+                    while child.Parent == debrisFolder and running do
+                        -- Convert world position to screen position
+                        local screenPos, onScreen = camera:WorldToViewportPoint(child.Position)
+                        if onScreen then
+                            -- Simulate mouse click at that screen position
+                            input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)  -- mouse down
+                            input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0) -- mouse up
+                            print("Clicked:", child.Name)
+                        else
+                            print(child.Name .. " is off-screen.")
                         end
+                        task.wait(0.2) -- adjust click speed here
                     end
-                    task.wait(1) -- wait a bit before next full loop
+
+                    if not running then break end
+
+                    -- Teleport to next child only AFTER this one is gone
+                    hrp.CFrame = child.CFrame + Vector3.new(0, 3, 0)
+                    task.wait(0.5)
+                    print(child.Name .. " removed, teleported to next.")
                 end
-            end)
+            end
+        end
+        task.wait(1) -- wait before restarting loop
+    end
+end
+
+local Keybind = MainTab:CreateKeybind({
+    Name = "AutoTap Keybind",
+    CurrentKeybind = "Q",
+    HoldToInteract = false,
+    Flag = "KeybindAutoTap",
+    Callback = function()
+        running = not running
+        if running then
+            print("AutoTap started")
+            toggleThread = task.spawn(autoTapLoop)
+        else
+            print("AutoTap stopped")
         end
     end,
 })
