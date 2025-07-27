@@ -19,7 +19,7 @@ local player = game.Players.LocalPlayer
 local camera = workspace.CurrentCamera
 local vim = game:GetService("VirtualInputManager")
 
-local radius = 15
+local radius = 1500
 local running = false
 local drawCircle = nil
 
