@@ -23,6 +23,28 @@ local input = game:GetService("VirtualInputManager")
 local running = false
 local toggleThread
 
+local function getClosestChild()
+    local character = player.Character
+    if not character then return nil end
+    local hrp = character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+
+    local closestChild = nil
+    local closestDist = math.huge
+
+    for _, child in ipairs(debrisFolder:GetChildren()) do
+        if child:IsA("BasePart") and child.Name ~= "Part" and child.Parent == debrisFolder then
+            local dist = (hrp.Position - child.Position).Magnitude
+            if dist < closestDist then
+                closestDist = dist
+                closestChild = child
+            end
+        end
+    end
+
+    return closestChild
+end
+
 local function autoTapLoop()
     while running do
         if not debrisFolder then
@@ -32,35 +54,37 @@ local function autoTapLoop()
             local character = player.Character or player.CharacterAdded:Wait()
             local hrp = character:WaitForChild("HumanoidRootPart")
 
-            for _, child in ipairs(debrisFolder:GetChildren()) do
-                if not running then break end
-                if child:IsA("BasePart") and child.Name ~= "Part" and child.Parent == debrisFolder then
-                    print("Tapping:", child.Name)
-                    -- Repeatedly tap the child until it's gone or toggle off
-                    while child.Parent == debrisFolder and running do
-                        -- Convert world position to screen position
-                        local screenPos, onScreen = camera:WorldToViewportPoint(child.Position)
-                        if onScreen then
-                            -- Simulate mouse click at that screen position
-                            input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)  -- mouse down
-                            input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0) -- mouse up
-                            print("Clicked:", child.Name)
-                        else
-                            print(child.Name .. " is off-screen.")
-                        end
-                        task.wait(0.2) -- adjust click speed here
+            while running do
+                local child = getClosestChild()
+                if not child then
+                    print("No valid children found in Debris, waiting...")
+                    task.wait(2)
+                    break
+                end
+
+                print("Tapping closest child:", child.Name)
+                while child.Parent == debrisFolder and running do
+                    local screenPos, onScreen = camera:WorldToViewportPoint(child.Position)
+                    if onScreen then
+                        input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)
+                        input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0)
+                        print("Clicked:", child.Name)
+                    else
+                        print(child.Name .. " is off-screen.")
                     end
+                    task.wait(0.2)
+                end
 
-                    if not running then break end
+                if not running then break end
 
-                    -- Teleport to next child only AFTER this one is gone
+                if child.Parent and running then
                     hrp.CFrame = child.CFrame + Vector3.new(0, 3, 0)
                     task.wait(0.5)
-                    print(child.Name .. " removed, teleported to next.")
+                    print("Teleported to:", child.Name)
                 end
             end
         end
-        task.wait(1) -- wait before restarting loop
+        task.wait(1)
     end
 end
 
