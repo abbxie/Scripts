@@ -2,91 +2,86 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 print("Rayfield loaded successfully")
 
 local Window = Rayfield:CreateWindow({
-    Name = "Rayfield Example Window",
-    LoadingTitle = "Rayfield Interface Suite",
+    Name = "Auto Click Radius",
+    LoadingTitle = "Rayfield",
     LoadingSubtitle = "by Sirius",
     ConfigurationSaving = {
         Enabled = true,
         FolderName = nil,
-        FileName = "Big Hub"
+        FileName = "ClickRadius"
     }
 })
 
-local MainTab = Window:CreateTab("AutoFarm", 4483362458)
-local Section = MainTab:CreateSection("AutoHatch")
+local Tab = Window:CreateTab("Autoclick", 4483362458)
+local Section = Tab:CreateSection("Click Settings")
 
 local player = game.Players.LocalPlayer
-local debrisFolder = workspace:FindFirstChild("Visual") and workspace.Visual:FindFirstChild("Debris")
 local camera = workspace.CurrentCamera
-local input = game:GetService("VirtualInputManager")
+local vim = game:GetService("VirtualInputManager")
 
+local radius = 15
 local running = false
-local tapThread
+local drawCircle = nil
 
-local function autoTapLoop()
-    while running do
-        if not debrisFolder then
-            warn("workspace.Visual.Debris not found")
-            task.wait(5)
-        else
-            local children = debrisFolder:GetChildren()
-            local character = player.Character or player.CharacterAdded:Wait()
-            local hrp = character:WaitForChild("HumanoidRootPart")
+-- Draw red selection sphere around the player
+local function updateCircle()
+    if drawCircle then drawCircle:Remove() end
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
 
-            -- Find closest child quickly
-            local closestChild = nil
-            local closestDist = math.huge
-
-            for _, child in ipairs(children) do
-                if child:IsA("BasePart") and child.Name ~= "Part" and child.Parent == debrisFolder then
-                    local dist = (hrp.Position - child.Position).Magnitude
-                    if dist < closestDist then
-                        closestDist = dist
-                        closestChild = child
-                    end
-                end
-            end
-
-            if closestChild then
-                -- Teleport once
-                hrp.CFrame = closestChild.CFrame + Vector3.new(0, 3, 0)
-                task.wait(0.3)
-                print("Teleported to:", closestChild.Name)
-
-                -- Tap repeatedly until gone or stopped
-                while closestChild.Parent == debrisFolder and running do
-                    local screenPos, onScreen = camera:WorldToViewportPoint(closestChild.Position)
-                    if onScreen then
-                        input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)
-                        input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0)
-                        print("Clicked:", closestChild.Name)
-                    else
-                        print(closestChild.Name .. " is off-screen.")
-                    end
-                    task.wait(0.15) -- faster tapping interval
-                end
-            else
-                -- No children found, check again soon
-                task.wait(0.2)
-            end
-        end
-        task.wait(0.1) -- tiny wait to keep loop responsive
-    end
-    print("AutoTap loop stopped.")
+    local adorn = Instance.new("SelectionSphere")
+    adorn.Adornee = hrp
+    adorn.Color3 = Color3.fromRGB(255, 0, 0)
+    adorn.Transparency = 0.5
+    adorn.Parent = hrp
+    drawCircle = adorn
 end
 
-local Keybind = MainTab:CreateKeybind({
-    Name = "AutoTap Keybind",
+-- Click children inside Visual.Debris within radius
+local function clickNearby()
+    while running do
+        local char = player.Character
+        if not char then task.wait(0.5) continue end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then task.wait(0.5) continue end
+
+        local debrisFolder = workspace:FindFirstChild("Visual") and workspace.Visual:FindFirstChild("Debris")
+        if debrisFolder then
+            for _, obj in ipairs(debrisFolder:GetChildren()) do
+                if obj:IsA("BasePart") and obj.Transparency < 1 then
+                    local dist = (obj.Position - hrp.Position).Magnitude
+                    if dist <= radius then
+                        local screenPos, onScreen = camera:WorldToViewportPoint(obj.Position)
+                        if onScreen then
+                            vim:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)
+                            vim:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0)
+                            print("Clicked:", obj.Name)
+                            task.wait(0.05)
+                        end
+                    end
+                end
+            end
+        end
+        task.wait(0.15)
+    end
+end
+
+Tab:CreateKeybind({
+    Name = "Toggle Auto Click Radius",
     CurrentKeybind = "Q",
     HoldToInteract = false,
-    Flag = "KeybindAutoTap",
+    Flag = "AutoClickRadius",
     Callback = function()
         running = not running
         if running then
-            print("AutoTap started")
-            tapThread = task.spawn(autoTapLoop)
+            print("AutoClick started")
+            updateCircle()
+            task.spawn(clickNearby)
         else
-            print("AutoTap stopped")
+            print("AutoClick stopped")
+            if drawCircle then drawCircle:Remove() drawCircle = nil end
         end
     end,
 })
