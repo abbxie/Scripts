@@ -51,7 +51,7 @@ local function tapChild(child)
 
     -- Teleport once to child
     hrp.CFrame = child.CFrame + Vector3.new(0, 3, 0)
-    task.wait(0.5)
+    task.wait()
 
     print("Teleported to:", child.Name)
 
@@ -65,7 +65,7 @@ local function tapChild(child)
         else
             print(child.Name .. " is off-screen.")
         end
-        task.wait(0.2)
+        task.wait()
     end
 end
 
@@ -73,17 +73,17 @@ local function autoTapLoop()
     while running do
         if not debrisFolder then
             warn("workspace.Visual.Debris not found")
-            task.wait(5)
+            task.wait()
         else
             local child = getClosestChild()
             if child then
                 tapChild(child)
             else
                 print("No valid children found, waiting...")
-                task.wait(2)
+                task.wait()
             end
         end
-        task.wait(0.5) -- small delay before checking for next child
+        task.wait() -- small delay before checking for next child
     end
     print("AutoTap loop stopped.")
 end
