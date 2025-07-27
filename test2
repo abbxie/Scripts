@@ -1,105 +1,51 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
-print("Rayfield loaded successfully")
-
-local Window = Rayfield:CreateWindow({
-    Name = "Rayfield Example Window",
-    LoadingTitle = "Rayfield Interface Suite",
-    LoadingSubtitle = "by Sirius",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "Big Hub"
-    }
-})
-
-local MainTab = Window:CreateTab("AutoFarm", 4483362458)
-local Section = MainTab:CreateSection("AutoHatch")
-
-local player = game.Players.LocalPlayer
-local debrisFolder = workspace:FindFirstChild("Visual") and workspace.Visual:FindFirstChild("Debris")
-local camera = workspace.CurrentCamera
-local input = game:GetService("VirtualInputManager")
-
-local running = false
-local tapThread
-
-local function getClosestChild()
-    local character = player.Character
-    if not character then return nil end
-    local hrp = character:FindFirstChild("HumanoidRootPart")
-    if not hrp then return nil end
-
-    local closestChild = nil
-    local closestDist = math.huge
-
-    for _, child in ipairs(debrisFolder:GetChildren()) do
-        if child:IsA("BasePart") and child.Name ~= "Part" and child.Parent == debrisFolder then
-            local dist = (hrp.Position - child.Position).Magnitude
-            if dist < closestDist then
-                closestDist = dist
-                closestChild = child
-            end
-        end
-    end
-
-    return closestChild
-end
-
-local function tapChild(child)
-    local character = player.Character or player.CharacterAdded:Wait()
-    local hrp = character:WaitForChild("HumanoidRootPart")
-
-    -- Teleport once to child
-    hrp.CFrame = child.CFrame + Vector3.new(0, 3, 0)
-    task.wait()
-
-    print("Teleported to:", child.Name)
-
-    -- Tap repeatedly until child is gone or stopped
-    while child.Parent == debrisFolder and running do
-        local screenPos, onScreen = camera:WorldToViewportPoint(child.Position)
-        if onScreen then
-            input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)
-            input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0)
-            print("Clicked:", child.Name)
-        else
-            print(child.Name .. " is off-screen.")
-        end
-        task.wait()
-    end
-end
-
 local function autoTapLoop()
     while running do
         if not debrisFolder then
             warn("workspace.Visual.Debris not found")
-            task.wait()
+            task.wait(5)
         else
-            local child = getClosestChild()
-            if child then
-                tapChild(child)
+            local children = debrisFolder:GetChildren()
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:WaitForChild("HumanoidRootPart")
+
+            -- Find closest child quickly
+            local closestChild = nil
+            local closestDist = math.huge
+
+            for _, child in ipairs(children) do
+                if child:IsA("BasePart") and child.Name ~= "Part" and child.Parent == debrisFolder then
+                    local dist = (hrp.Position - child.Position).Magnitude
+                    if dist < closestDist then
+                        closestDist = dist
+                        closestChild = child
+                    end
+                end
+            end
+
+            if closestChild then
+                -- Teleport once
+                hrp.CFrame = closestChild.CFrame + Vector3.new(0, 3, 0)
+                task.wait(0.3)
+                print("Teleported to:", closestChild.Name)
+
+                -- Tap repeatedly until gone or stopped
+                while closestChild.Parent == debrisFolder and running do
+                    local screenPos, onScreen = camera:WorldToViewportPoint(closestChild.Position)
+                    if onScreen then
+                        input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)
+                        input:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0)
+                        print("Clicked:", closestChild.Name)
+                    else
+                        print(closestChild.Name .. " is off-screen.")
+                    end
+                    task.wait(0.15) -- faster tapping interval
+                end
             else
-                print("No valid children found, waiting...")
-                task.wait()
+                -- No children found, check again soon
+                task.wait(0.2)
             end
         end
-        task.wait() -- small delay before checking for next child
+        task.wait(0.1) -- tiny wait to keep loop responsive
     end
     print("AutoTap loop stopped.")
 end
-
-local Keybind = MainTab:CreateKeybind({
-    Name = "AutoTap Keybind",
-    CurrentKeybind = "Q",
-    HoldToInteract = false,
-    Flag = "KeybindAutoTap",
-    Callback = function()
-        running = not running
-        if running then
-            print("AutoTap started")
-            tapThread = task.spawn(autoTapLoop)
-        else
-            print("AutoTap stopped")
-        end
-    end,
-})
