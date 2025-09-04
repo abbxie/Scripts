@@ -1,7 +1,10 @@
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
 
 local worldBlocks = workspace:WaitForChild("WorldBlocks")
 
@@ -12,22 +15,20 @@ highlight.SurfaceTransparency = 0.5
 highlight.Color3 = Color3.fromRGB(255, 0, 0)
 highlight.Parent = game.CoreGui
 
--- Track last movement direction
-local lastDirection = Vector3.new(0, 0, 1) -- default facing forward (Z+)
+-- Track last facing direction (default up)
+local lastDirection = Vector3.new(0,0,-1)
 
--- Update lastDirection whenever player moves
-root:GetPropertyChangedSignal("Position"):Connect(function()
-    local moveVector = (root.Position - root.Position) -- small delta each frame
-    if moveVector.Magnitude > 0.01 then
-        if math.abs(moveVector.X) > math.abs(moveVector.Z) then
-            lastDirection = Vector3.new(math.sign(moveVector.X), 0, 0)
-        else
-            lastDirection = Vector3.new(0, 0, math.sign(moveVector.Z))
-        end
+-- Update lastDirection based on velocity
+RunService.RenderStepped:Connect(function()
+    local vel = root.Velocity
+    if math.abs(vel.X) > math.abs(vel.Z) then
+        lastDirection = Vector3.new(math.sign(vel.X), 0, 0)
+    elseif math.abs(vel.Z) > 0 then
+        lastDirection = Vector3.new(0, 0, math.sign(vel.Z))
     end
 end)
 
--- Function to find Dirt straight ahead (2D axis)
+-- Function to find Dirt straight ahead in 2D
 local function getDirtStraight2D()
     local closest = nil
     local shortestDist = math.huge
@@ -54,11 +55,11 @@ local function getDirtStraight2D()
 end
 
 -- Update loop
-while task.wait(0.2) do
+RunService.RenderStepped:Connect(function()
     local dirtAhead = getDirtStraight2D()
     if dirtAhead then
         highlight.Adornee = dirtAhead
     else
         highlight.Adornee = nil
     end
-end
+end)
