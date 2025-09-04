@@ -1,81 +1,64 @@
-local player = game.Players.LocalPlayer
-local camera = workspace.CurrentCamera
-local vim = game:GetService("VirtualInputManager")
-local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
 
-local radius = 15
-local ringAdornment = nil
-local running = true
+local worldBlocks = workspace:WaitForChild("WorldBlocks")
 
--- Create the ring once and update its position every frame to stay on ground beneath player
-local function createRing()
-    if ringAdornment then ringAdornment:Destroy() end
+-- Highlight object
+local highlight = Instance.new("SelectionBox")
+highlight.LineThickness = 0.05
+highlight.SurfaceTransparency = 0.5
+highlight.Color3 = Color3.fromRGB(255, 0, 0)
+highlight.Parent = game.CoreGui
 
-    ringAdornment = Instance.new("CylinderHandleAdornment")
-    ringAdornment.Parent = workspace.Terrain
-    ringAdornment.Radius = radius
-    ringAdornment.Height = 0.05
-    ringAdornment.Color3 = Color3.fromRGB(255, 0, 0)
-    ringAdornment.Transparency = 0.5
-    ringAdornment.ZIndex = 1
-    ringAdornment.AlwaysOnTop = true
-    ringAdornment.Name = "ClickRing"
+-- Track last movement direction
+local lastDirection = Vector3.new(0, 0, 1) -- default facing forward (Z+)
 
-    RunService.Heartbeat:Connect(function()
-        if not running then return end
-        local char = player.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-
-        -- Raycast down to find ground position
-        local rayOrigin = hrp.Position
-        local rayDirection = Vector3.new(0, -50, 0)
-        local raycastParams = RaycastParams.new()
-        raycastParams.FilterDescendantsInstances = {char}
-        raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
-
-        local raycastResult = workspace:Raycast(rayOrigin, rayDirection, raycastParams)
-        local groundPos
-
-        if raycastResult then
-            groundPos = raycastResult.Position
+-- Update lastDirection whenever player moves
+root:GetPropertyChangedSignal("Position"):Connect(function()
+    local moveVector = (root.Position - root.Position) -- small delta each frame
+    if moveVector.Magnitude > 0.01 then
+        if math.abs(moveVector.X) > math.abs(moveVector.Z) then
+            lastDirection = Vector3.new(math.sign(moveVector.X), 0, 0)
         else
-            groundPos = Vector3.new(hrp.Position.X, 0, hrp.Position.Z)
+            lastDirection = Vector3.new(0, 0, math.sign(moveVector.Z))
         end
+    end
+end)
 
-        ringAdornment.CFrame = CFrame.new(groundPos) * CFrame.Angles(math.rad(90), 0, 0)
-    end)
-end
+-- Function to find Dirt straight ahead (2D axis)
+local function getDirtStraight2D()
+    local closest = nil
+    local shortestDist = math.huge
+    local playerPos = root.Position
 
--- Continuously click parts in workspace.Visual.Debris within radius
-local function clickNearby()
-    while running do
-        local char = player.Character
-        if not char then task.wait(0.5) continue end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then task.wait(0.5) continue end
+    for _, block in ipairs(worldBlocks:GetChildren()) do
+        local dirt = block:FindFirstChild("Dirt")
+        if dirt and dirt:IsA("BasePart") then
+            local dirToDirt = dirt.Position - playerPos
+            local alongAxis = lastDirection.X ~= 0 and math.sign(dirToDirt.X) == lastDirection.X
+                             or lastDirection.Z ~= 0 and math.sign(dirToDirt.Z) == lastDirection.Z
 
-        local debrisFolder = workspace:FindFirstChild("Visual") and workspace.Visual:FindFirstChild("Debris")
-        if debrisFolder then
-            for _, obj in ipairs(debrisFolder:GetChildren()) do
-                if obj:IsA("BasePart") and obj.Transparency < 1 and obj:IsDescendantOf(workspace) then
-                    local dist = (obj.Position - hrp.Position).Magnitude
-                    if dist <= radius then
-                        local screenPos, onScreen = camera:WorldToViewportPoint(obj.Position)
-                        if onScreen then
-                            vim:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, true, game, 0)
-                            vim:SendMouseButtonEvent(screenPos.X, screenPos.Y, 0, false, game, 0)
-                            task.wait(0.05)
-                        end
-                    end
+            if alongAxis then
+                local dist = dirToDirt.Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = dirt
                 end
             end
         end
-
-        task.wait(0.15)
     end
+
+    return closest
 end
 
-createRing()
-task.spawn(clickNearby)
+-- Update loop
+while task.wait(0.2) do
+    local dirtAhead = getDirtStraight2D()
+    if dirtAhead then
+        highlight.Adornee = dirtAhead
+    else
+        highlight.Adornee = nil
+    end
+end
