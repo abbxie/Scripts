@@ -53,7 +53,7 @@ local function getClosestBlock()
     local closest = nil
     local shortestDist = math.huge
 
-    for index, block in ipairs(worldBlocks:GetChildren()) do
+    for _, block in ipairs(worldBlocks:GetChildren()) do
         for _, child in ipairs(block:GetChildren()) do
             if child:IsA("BasePart") and isAllowedBlock(child.Name) and passesDirectionFilters(child) then
                 local dist = (child.Position - root.Position).Magnitude
@@ -69,17 +69,22 @@ local function getClosestBlock()
 end
 
 -- Main loop
-while task.wait(0.2) do
+while task.wait(0.1) do
     local closest = getClosestBlock()
-    if closest then
+    if closest and closest.Parent and closest.Parent:IsDescendantOf(workspace) then
         highlight.Adornee = closest
 
         -- Get the child index of the highlighted block inside WorldBlocks
         local children = worldBlocks:GetChildren()
-        local blockIndex = table.find(children, closest.Parent) -- parent of the part is the WorldBlock
+        local blockIndex = table.find(children, closest.Parent) -- parent is the WorldBlock
         if blockIndex then
             local args = { [1] = children[blockIndex] }
-            punchRemote:FireServer(unpack(args))
+
+            -- Continuously spam the remote until the block is gone
+            while children[blockIndex] and children[blockIndex]:IsDescendantOf(workspace) do
+                punchRemote:FireServer(unpack(args))
+                task.wait(0.05) -- short delay to prevent freezing
+            end
         end
     else
         highlight.Adornee = nil
