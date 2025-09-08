@@ -6,8 +6,13 @@ local root = character:WaitForChild("HumanoidRootPart")
 local worldBlocks = workspace:WaitForChild("WorldBlocks")
 
 -- 🔧 SETTINGS
-local FRONT_ONLY = true   -- set to false if you want closest dirt anywhere
-local DOT_THRESHOLD = 0.5 -- how "in front" it must be (1 = perfectly ahead, 0 = 90° to side)
+local FRONT_ONLY = true    -- highlight only in front of player
+local UP_ONLY = false      -- highlight only above player
+local DOWN_ONLY = false    -- highlight only below player
+
+-- thresholds
+local DOT_THRESHOLD = 0.5  -- "front" strictness (1 = straight ahead, 0 = wide)
+local Y_THRESHOLD = 2      -- leeway for up/down checks
 
 -- Highlight object
 local highlight = Instance.new("SelectionBox")
@@ -16,28 +21,48 @@ highlight.SurfaceTransparency = 0.5
 highlight.Color3 = Color3.fromRGB(255, 0, 0)
 highlight.Parent = game.CoreGui -- put in CoreGui so it stays visible
 
+-- Function to check if block passes direction filters
+local function passesDirectionFilters(dirt)
+    local pos = dirt.Position
+    local rootPos = root.Position
+
+    -- front check
+    if FRONT_ONLY then
+        local lookVector = root.CFrame.LookVector
+        local dirToBlock = (pos - rootPos).Unit
+        local dot = lookVector:Dot(dirToBlock)
+        if dot <= DOT_THRESHOLD then
+            return false
+        end
+    end
+
+    -- up check
+    if UP_ONLY and not (pos.Y > rootPos.Y + Y_THRESHOLD) then
+        return false
+    end
+
+    -- down check
+    if DOWN_ONLY and not (pos.Y < rootPos.Y - Y_THRESHOLD) then
+        return false
+    end
+
+    return true
+end
+
 -- Function to find closest Dirt
 local function getClosestDirt()
     local closest = nil
     local shortestDist = math.huge
-    local lookVector = root.CFrame.LookVector
 
     for _, block in ipairs(worldBlocks:GetChildren()) do
         local dirt = block:FindFirstChild("Dirt")
         if dirt and dirt:IsA("BasePart") then
-            local dist = (dirt.Position - root.Position).Magnitude
-
-            -- Check if in front (only if FRONT_ONLY = true)
-            local inFront = true
-            if FRONT_ONLY then
-                local dirToBlock = (dirt.Position - root.Position).Unit
-                local dot = lookVector:Dot(dirToBlock)
-                inFront = dot > DOT_THRESHOLD
-            end
-
-            if inFront and dist < shortestDist then
-                shortestDist = dist
-                closest = dirt
+            if passesDirectionFilters(dirt) then
+                local dist = (dirt.Position - root.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = dirt
+                end
             end
         end
     end
