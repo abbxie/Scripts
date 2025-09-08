@@ -1,52 +1,43 @@
 local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
 
 local worldBlocks = workspace:WaitForChild("WorldBlocks")
+
+-- 🔧 SETTINGS
+local FRONT_ONLY = true   -- set to false if you want closest dirt anywhere
+local DOT_THRESHOLD = 0.5 -- how "in front" it must be (1 = perfectly ahead, 0 = 90° to side)
 
 -- Highlight object
 local highlight = Instance.new("SelectionBox")
 highlight.LineThickness = 0.05
 highlight.SurfaceTransparency = 0.5
 highlight.Color3 = Color3.fromRGB(255, 0, 0)
-highlight.Parent = game.CoreGui
+highlight.Parent = game.CoreGui -- put in CoreGui so it stays visible
 
--- Track last facing direction (default up)
-local lastDirection = Vector3.new(0,0,-1)
-
--- Update lastDirection based on velocity
-RunService.RenderStepped:Connect(function()
-    local vel = root.Velocity
-    if math.abs(vel.X) > math.abs(vel.Z) then
-        lastDirection = Vector3.new(math.sign(vel.X), 0, 0)
-    elseif math.abs(vel.Z) > 0 then
-        lastDirection = Vector3.new(0, 0, math.sign(vel.Z))
-    end
-end)
-
--- Function to find Dirt straight ahead in 2D
-local function getDirtStraight2D()
+-- Function to find closest Dirt
+local function getClosestDirt()
     local closest = nil
     local shortestDist = math.huge
-    local playerPos = root.Position
+    local lookVector = root.CFrame.LookVector
 
     for _, block in ipairs(worldBlocks:GetChildren()) do
         local dirt = block:FindFirstChild("Dirt")
         if dirt and dirt:IsA("BasePart") then
-            local dirToDirt = dirt.Position - playerPos
-            local alongAxis = lastDirection.X ~= 0 and math.sign(dirToDirt.X) == lastDirection.X
-                             or lastDirection.Z ~= 0 and math.sign(dirToDirt.Z) == lastDirection.Z
+            local dist = (dirt.Position - root.Position).Magnitude
 
-            if alongAxis then
-                local dist = dirToDirt.Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closest = dirt
-                end
+            -- Check if in front (only if FRONT_ONLY = true)
+            local inFront = true
+            if FRONT_ONLY then
+                local dirToBlock = (dirt.Position - root.Position).Unit
+                local dot = lookVector:Dot(dirToBlock)
+                inFront = dot > DOT_THRESHOLD
+            end
+
+            if inFront and dist < shortestDist then
+                shortestDist = dist
+                closest = dirt
             end
         end
     end
@@ -55,11 +46,11 @@ local function getDirtStraight2D()
 end
 
 -- Update loop
-RunService.RenderStepped:Connect(function()
-    local dirtAhead = getDirtStraight2D()
-    if dirtAhead then
-        highlight.Adornee = dirtAhead
+while task.wait(0.2) do
+    local closest = getClosestDirt()
+    if closest then
+        highlight.Adornee = closest
     else
         highlight.Adornee = nil
     end
-end)
+end
