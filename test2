@@ -4,31 +4,27 @@ local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
 
 local worldBlocks = workspace:WaitForChild("WorldBlocks")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
 
 -- 🔧 SETTINGS
-local FRONT_ONLY = true    -- highlight only in front of player
-local UP_ONLY = false      -- highlight only above player
-local DOWN_ONLY = false    -- highlight only below player
+local FRONT_ONLY = true
+local UP_ONLY = false
+local DOWN_ONLY = false
+local DOT_THRESHOLD = 0.5
+local Y_THRESHOLD = 2
 
--- thresholds
-local DOT_THRESHOLD = 0.5  -- "front" strictness (1 = straight ahead, 0 = wide)
-local Y_THRESHOLD = 2      -- leeway for up/down checks
-
--- whitelist of block names (case-sensitive)
-local ALLOWED_BLOCKS = {
-    "Dirt",
-    "Stone",
-    "Grass"
-}
+-- whitelist of block names
+local ALLOWED_BLOCKS = { "Dirt", "Stone", "Grass" }
 
 -- Highlight object
 local highlight = Instance.new("SelectionBox")
 highlight.LineThickness = 0.05
 highlight.SurfaceTransparency = 0.5
 highlight.Color3 = Color3.fromRGB(255, 0, 0)
-highlight.Parent = game.CoreGui -- stays visible across resets
+highlight.Parent = game.CoreGui
 
--- Function to check whitelist
+-- Helper functions
 local function isAllowedBlock(name)
     for _, allowed in ipairs(ALLOWED_BLOCKS) do
         if name == allowed then
@@ -38,48 +34,32 @@ local function isAllowedBlock(name)
     return false
 end
 
--- Function to check if block passes direction filters
-local function passesDirectionFilters(dirt)
-    local pos = dirt.Position
+local function passesDirectionFilters(block)
+    local pos = block.Position
     local rootPos = root.Position
 
-    -- front check
     if FRONT_ONLY then
         local lookVector = root.CFrame.LookVector
         local dirToBlock = (pos - rootPos).Unit
         local dot = lookVector:Dot(dirToBlock)
-        if dot <= DOT_THRESHOLD then
-            return false
-        end
+        if dot <= DOT_THRESHOLD then return false end
     end
-
-    -- up check
-    if UP_ONLY and not (pos.Y > rootPos.Y + Y_THRESHOLD) then
-        return false
-    end
-
-    -- down check
-    if DOWN_ONLY and not (pos.Y < rootPos.Y - Y_THRESHOLD) then
-        return false
-    end
-
+    if UP_ONLY and not (pos.Y > rootPos.Y + Y_THRESHOLD) then return false end
+    if DOWN_ONLY and not (pos.Y < rootPos.Y - Y_THRESHOLD) then return false end
     return true
 end
 
--- Function to find closest allowed block
 local function getClosestBlock()
     local closest = nil
     local shortestDist = math.huge
 
-    for _, block in ipairs(worldBlocks:GetChildren()) do
+    for index, block in ipairs(worldBlocks:GetChildren()) do
         for _, child in ipairs(block:GetChildren()) do
-            if child:IsA("BasePart") and isAllowedBlock(child.Name) then
-                if passesDirectionFilters(child) then
-                    local dist = (child.Position - root.Position).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closest = child
-                    end
+            if child:IsA("BasePart") and isAllowedBlock(child.Name) and passesDirectionFilters(child) then
+                local dist = (child.Position - root.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = child
                 end
             end
         end
@@ -88,11 +68,19 @@ local function getClosestBlock()
     return closest
 end
 
--- Update loop
+-- Main loop
 while task.wait(0.2) do
     local closest = getClosestBlock()
     if closest then
         highlight.Adornee = closest
+
+        -- Get the child index of the highlighted block inside WorldBlocks
+        local children = worldBlocks:GetChildren()
+        local blockIndex = table.find(children, closest.Parent) -- parent of the part is the WorldBlock
+        if blockIndex then
+            local args = { [1] = children[blockIndex] }
+            punchRemote:FireServer(unpack(args))
+        end
     else
         highlight.Adornee = nil
     end
