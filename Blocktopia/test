@@ -1,10 +1,10 @@
 -- Rayfield Setup
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
-   Name = "Block Highlighter & Puncher",
-   LoadingTitle = "Block Tools",
-   LoadingSubtitle = "by You",
-   Theme = "Default"
+    Name = "Block Highlighter & Puncher",
+    LoadingTitle = "Block Tools",
+    LoadingSubtitle = "by You",
+    Theme = "Default"
 })
 
 local Tab = Window:CreateTab("Main", 4483362458)
@@ -25,7 +25,9 @@ local UP_ONLY = false
 local DOWN_ONLY = false
 local DOT_THRESHOLD = 0.5
 local Y_THRESHOLD = 2
-local ALLOWED_BLOCKS = { "Dirt", "Stone", "Grass" }
+
+-- Start with empty whitelist
+local ALLOWED_BLOCKS = {}
 
 -- Highlight object
 local highlight = Instance.new("SelectionBox")
@@ -110,3 +112,30 @@ local Toggle = Tab:CreateToggle({
         end
     end
 })
+
+-- Adaptive Input (TextBox) for whitelist
+local Input = Tab:CreateInput({
+    Name = "Whitelist Blocks",
+    CurrentValue = "",
+    PlaceholderText = "Enter blocks, e.g., Dirt, Stone",
+    RemoveTextAfterFocusLost = false,
+    Flag = "WhitelistInput",
+    Callback = function(Text)
+        -- Clear previous whitelist
+        ALLOWED_BLOCKS = {}
+
+        -- Split input by commas, trim spaces, and add to whitelist
+        for word in string.gmatch(Text, '([^,]+)') do
+            local cleanWord = word:gsub("^%s*(.-)%s*$", "%1")
+            if cleanWord ~= "" then
+                table.insert(ALLOWED_BLOCKS, cleanWord)
+            end
+        end
+
+        -- Optional: print updated whitelist for debugging
+        print("Updated Whitelist:", unpack(ALLOWED_BLOCKS))
+    end,
+})
+
+-- Example: programmatically updating the input
+-- Input:Set("Dirt, Stone") -- This will also update ALLOWED_BLOCKS
