@@ -1,30 +1,44 @@
-local args = {
-    [1] = "Golden Spotted Egg";
-    [2] = false;
-    [3] = true;
-}
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
 
-local repStorage = game:GetService("ReplicatedStorage")
-local children = repStorage:GetChildren()
+local worldBlocks = workspace:WaitForChild("WorldBlocks")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
 
-for i = 1, 200 do
-    local child = children[i]
-    if child then
-        local success, err = pcall(function()
-            if child:IsA("RemoteFunction") then
-                child:InvokeServer(unpack(args))
-            elseif child:IsA("RemoteEvent") then
-                child:FireServer(unpack(args))
-            else
-                error("Not a remote")
+-- SETTINGS
+local POSITION_TOLERANCE = 1 -- how close the player must be to the door (in studs)
+
+-- Check if player is standing exactly on a door
+local function getDoorUnderPlayer()
+    local rootPos = root.Position
+
+    for _, block in ipairs(worldBlocks:GetChildren()) do
+        for _, child in ipairs(block:GetChildren()) do
+            if child:IsA("BasePart") and child.Name == "Door" then
+                local distXZ = (Vector3.new(child.Position.X, 0, child.Position.Z) - Vector3.new(rootPos.X, 0, rootPos.Z)).Magnitude
+                local yDiff = math.abs(child.Position.Y - rootPos.Y)
+
+                -- Player must be right on top of the door tile (XZ) and at same height (Y)
+                if distXZ <= POSITION_TOLERANCE and yDiff <= POSITION_TOLERANCE then
+                    return child
+                end
             end
-        end)
-        if success then
-            print("Success at index " .. i)
-        else
-            print("Error at index " .. i .. ": " .. err)
         end
-    else
-        print("No child at index " .. i)
+    end
+    return nil
+end
+
+-- Main loop
+while task.wait(0.2) do
+    local door = getDoorUnderPlayer()
+    if door then
+        local children = worldBlocks:GetChildren()
+        local blockIndex = table.find(children, door.Parent) -- door’s parent is the world block
+        if blockIndex then
+            local args = { [1] = children[blockIndex] }
+            punchRemote:FireServer(unpack(args))
+        end
     end
 end
