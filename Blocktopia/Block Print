@@ -1,0 +1,15 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+local workspace = game:GetService("Workspace")
+local worldBlocks = workspace:WaitForChild("WorldBlocks")
+
+-- When the player clicks
+mouse.Button1Down:Connect(function()
+    -- Get the mouse target
+    local target = mouse.Target
+    if target and target:IsDescendantOf(worldBlocks) then
+        -- Print the parent block name (the main block)
+        print("Clicked block: " .. target.Parent.Name)
+    end
+end)
