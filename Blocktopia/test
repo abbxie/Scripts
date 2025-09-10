@@ -1,4 +1,6 @@
+-- ===============================
 -- Rayfield Setup
+-- ===============================
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
     Name = "Block Highlighter & Puncher",
@@ -36,7 +38,9 @@ highlight.SurfaceTransparency = 0.5
 highlight.Color3 = Color3.fromRGB(255, 0, 0)
 highlight.Parent = game.CoreGui
 
--- Helper functions
+-- ===============================
+-- Helper Functions
+-- ===============================
 local function isAllowedBlock(name)
     for _, allowed in ipairs(ALLOWED_BLOCKS) do
         if name == allowed then return true end
@@ -75,7 +79,9 @@ local function getClosestBlock()
     return closest
 end
 
+-- ===============================
 -- Toggle control for Auto Punch & Highlight
+-- ===============================
 local running = false
 
 local Toggle = Tab:CreateToggle({
@@ -113,29 +119,46 @@ local Toggle = Tab:CreateToggle({
     end
 })
 
--- Separate TextBox for managing whitelist
-local WhitelistInput = Tab:CreateInput({
-    Name = "Whitelist Blocks",
-    CurrentValue = "",
-    PlaceholderText = "Enter blocks, e.g., Dirt, Stone",
-    RemoveTextAfterFocusLost = false,
-    Flag = "WhitelistInput",
-    Callback = function(Text)
-        -- Clear previous whitelist
-        ALLOWED_BLOCKS = {}
+-- ===============================
+-- Custom GUI for Whitelist
+-- ===============================
+local PlayerGui = player:WaitForChild("PlayerGui")
 
-        -- Split input by commas, trim spaces, and add to whitelist
-        for word in string.gmatch(Text, '([^,]+)') do
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "WhitelistGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = PlayerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 50)
+frame.Position = UDim2.new(0, 20, 0, 20)
+frame.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+local textBox = Instance.new("TextBox")
+textBox.Size = UDim2.new(1, -10, 1, -10)
+textBox.Position = UDim2.new(0, 5, 0, 5)
+textBox.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.PlaceholderText = "Enter blocks, e.g., Dirt, Stone"
+textBox.ClearTextOnFocus = false
+textBox.Text = ""
+textBox.Parent = frame
+
+-- Update whitelist when text changes
+textBox.FocusLost:Connect(function(enterPressed)
+    if enterPressed then
+        ALLOWED_BLOCKS = {}
+        for word in string.gmatch(textBox.Text, '([^,]+)') do
             local cleanWord = word:gsub("^%s*(.-)%s*$", "%1")
             if cleanWord ~= "" then
-                table.insert(ALLOWED_BLOCKS, cleanWord)
+                -- Avoid duplicates
+                if not table.find(ALLOWED_BLOCKS, cleanWord) then
+                    table.insert(ALLOWED_BLOCKS, cleanWord)
+                end
             end
         end
-
-        -- Optional: print updated whitelist for debugging
         print("Updated Whitelist:", unpack(ALLOWED_BLOCKS))
-    end,
-})
-
--- Optional: programmatically set default whitelist
--- WhitelistInput:Set("Dirt, Stone")
+    end
+end)
