@@ -75,7 +75,7 @@ local function getClosestBlock()
     return closest
 end
 
--- Toggle control
+-- Toggle control for Auto Punch & Highlight
 local running = false
 
 local Toggle = Tab:CreateToggle({
@@ -113,8 +113,8 @@ local Toggle = Tab:CreateToggle({
     end
 })
 
--- Adaptive Input (TextBox) for whitelist
-local Input = Tab:CreateInput({
+-- Separate TextBox for managing whitelist
+local WhitelistInput = Tab:CreateInput({
     Name = "Whitelist Blocks",
     CurrentValue = "",
     PlaceholderText = "Enter blocks, e.g., Dirt, Stone",
@@ -137,5 +137,5 @@ local Input = Tab:CreateInput({
     end,
 })
 
--- Example: programmatically updating the input
--- Input:Set("Dirt, Stone") -- This will also update ALLOWED_BLOCKS
+-- Optional: programmatically set default whitelist
+-- WhitelistInput:Set("Dirt, Stone")
