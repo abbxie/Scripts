@@ -1,0 +1,100 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
+
+local worldBlocks = workspace:WaitForChild("WorldBlocks")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
+
+-- 🔧 SETTINGS
+local FRONT_ONLY = true
+local UP_ONLY = false
+local DOWN_ONLY = false
+local DOT_THRESHOLD = 0.5
+local Y_THRESHOLD = 2
+local ALLOWED_BLOCKS = { "Dirt", "Stone", "Grass" }
+
+-- Highlight object
+local highlight = Instance.new("SelectionBox")
+highlight.LineThickness = 0.05
+highlight.SurfaceTransparency = 0.5
+highlight.Color3 = Color3.fromRGB(255, 0, 0)
+highlight.Parent = game.CoreGui
+
+-- Helper functions
+local function isAllowedBlock(name)
+    for _, allowed in ipairs(ALLOWED_BLOCKS) do
+        if name == allowed then return true end
+    end
+    return false
+end
+
+local function passesDirectionFilters(block)
+    local pos = block.Position
+    local rootPos = root.Position
+    if FRONT_ONLY then
+        local lookVector = root.CFrame.LookVector
+        local dirToBlock = (pos - rootPos).Unit
+        local dot = lookVector:Dot(dirToBlock)
+        if dot <= DOT_THRESHOLD then return false end
+    end
+    if UP_ONLY and not (pos.Y > rootPos.Y + Y_THRESHOLD) then return false end
+    if DOWN_ONLY and not (pos.Y < rootPos.Y - Y_THRESHOLD) then return false end
+    return true
+end
+
+local function getClosestBlock()
+    local closest = nil
+    local shortestDist = math.huge
+    for _, block in ipairs(worldBlocks:GetChildren()) do
+        for _, child in ipairs(block:GetChildren()) do
+            if child:IsA("BasePart") and isAllowedBlock(child.Name) and passesDirectionFilters(child) then
+                local dist = (child.Position - root.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closest = child
+                end
+            end
+        end
+    end
+    return closest
+end
+
+-- Toggle control
+local running = false
+
+local Toggle = Tab:CreateToggle({
+    Name = "Auto Punch & Highlight",
+    CurrentValue = false,
+    Flag = "AutoPunchToggle",
+    Callback = function(Value)
+        running = Value
+        if running then
+            task.spawn(function()
+                while running do
+                    local closest = getClosestBlock()
+                    if closest and closest.Parent and closest.Parent:IsDescendantOf(workspace) then
+                        highlight.Adornee = closest
+
+                        local children = worldBlocks:GetChildren()
+                        local blockIndex = table.find(children, closest.Parent)
+                        if blockIndex then
+                            local args = { [1] = children[blockIndex] }
+                            while running and children[blockIndex] and children[blockIndex]:IsDescendantOf(workspace) do
+                                punchRemote:FireServer(unpack(args))
+                                task.wait(0.05)
+                            end
+                        end
+                    else
+                        highlight.Adornee = nil
+                        task.wait(0.1)
+                    end
+                end
+                highlight.Adornee = nil
+            end)
+        else
+            highlight.Adornee = nil
+        end
+    end
+})
