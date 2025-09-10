@@ -4,41 +4,68 @@ local character = player.Character or player.CharacterAdded:Wait()
 local root = character:WaitForChild("HumanoidRootPart")
 
 local worldBlocks = workspace:WaitForChild("WorldBlocks")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
 
--- SETTINGS
-local POSITION_TOLERANCE = 1 -- how close the player must be to the door (in studs)
+-- how many blocks to scan downward
+local SCAN_DEPTH = 2
+-- assuming blocks are size 3 (like Blocktopia grid)
+local BLOCK_SIZE = 3
 
--- Check if player is standing exactly on a door
-local function getDoorUnderPlayer()
-    local rootPos = root.Position
+-- store highlights so we don’t remake them every loop
+local highlights = {}
+
+local function makeHighlight(part)
+    local box = Instance.new("SelectionBox")
+    box.LineThickness = 0.02
+    box.SurfaceTransparency = 0.5
+    box.Color3 = Color3.fromRGB(255, 255, 255) -- white
+    box.Adornee = part
+    box.Parent = game.CoreGui
+    return box
+end
+
+-- function to check block below
+local function getBlockBelow(offset)
+    local pos = root.Position - Vector3.new(0, offset * BLOCK_SIZE, 0)
+    local closestBlock = nil
+    local shortestDist = math.huge
 
     for _, block in ipairs(worldBlocks:GetChildren()) do
         for _, child in ipairs(block:GetChildren()) do
-            if child:IsA("BasePart") and child.Name == "Door" then
-                local distXZ = (Vector3.new(child.Position.X, 0, child.Position.Z) - Vector3.new(rootPos.X, 0, rootPos.Z)).Magnitude
-                local yDiff = math.abs(child.Position.Y - rootPos.Y)
-
-                -- Player must be right on top of the door tile (XZ) and at same height (Y)
-                if distXZ <= POSITION_TOLERANCE and yDiff <= POSITION_TOLERANCE then
-                    return child
+            if child:IsA("BasePart") then
+                local dist = (child.Position - pos).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closestBlock = child
                 end
             end
         end
     end
-    return nil
+
+    return closestBlock
 end
 
--- Main loop
-while task.wait(0.2) do
-    local door = getDoorUnderPlayer()
-    if door then
-        local children = worldBlocks:GetChildren()
-        local blockIndex = table.find(children, door.Parent) -- door’s parent is the world block
-        if blockIndex then
-            local args = { [1] = children[blockIndex] }
-            punchRemote:FireServer(unpack(args))
+-- scan loop
+while task.wait(0.5) do
+    -- clear old highlights
+    for _, h in ipairs(highlights) do
+        h:Destroy()
+    end
+    highlights = {}
+
+    for i = 1, SCAN_DEPTH do
+        local block = getBlockBelow(i)
+        if block then
+            -- make a white highlight
+            local h = makeHighlight(block)
+            table.insert(highlights, h)
+
+            -- debug info
+            print("Scanning:", block.Name, " | Parent:", block.Parent.Name)
+
+            -- door check (block itself or parent or child named "Door")
+            if block.Name == "Door" or block.Parent.Name == "Door" or block:FindFirstChild("Door") then
+                print("door")
+            end
         end
     end
 end
