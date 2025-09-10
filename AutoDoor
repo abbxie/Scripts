@@ -1,0 +1,46 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
+
+local worldBlocks = workspace:WaitForChild("WorldBlocks")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
+
+-- Function to scan behind player
+local function scanBehind()
+    local lookVector = root.CFrame.LookVector
+    local behindDirection = -lookVector -- directly behind player
+
+    local raycastParams = RaycastParams.new()
+    raycastParams.FilterDescendantsInstances = {character}
+    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+    local raycastResult = workspace:Raycast(root.Position, behindDirection * 20, raycastParams)
+
+    if raycastResult and raycastResult.Instance then
+        local hit = raycastResult.Instance
+
+        -- Check if it's a Door or Door.HurtBox
+        if hit.Name == "Door" or hit.Name == "HurtBox" then
+            local parentBlock = hit.Name == "Door" and hit or hit.Parent
+            if parentBlock and parentBlock:IsDescendantOf(worldBlocks) then
+                -- Wait 1 second
+                task.wait(1)
+
+                -- Get the child index of the Door block inside WorldBlocks
+                local children = worldBlocks:GetChildren()
+                local blockIndex = table.find(children, parentBlock)
+                if blockIndex then
+                    local args = { [1] = children[blockIndex] }
+                    punchRemote:FireServer(unpack(args))
+                end
+            end
+        end
+    end
+end
+
+-- Loop to scan behind player every 0.5s
+while task.wait(0.5) do
+    scanBehind()
+end
