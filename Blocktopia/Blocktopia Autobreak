@@ -1,4 +1,4 @@
---// Rayfield Setup
+-- 📌 Rayfield Setup
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
 local Window = Rayfield:CreateWindow({
    Name = "Block Highlighter & Puncher",
@@ -10,7 +10,7 @@ local Window = Rayfield:CreateWindow({
 local Tab = Window:CreateTab("Main", 4483362458)
 local Section = Tab:CreateSection("Controls")
 
---// Roblox Services
+-- Services
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -20,42 +20,19 @@ local worldBlocks = workspace:WaitForChild("WorldBlocks")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
 
---// Settings
+-- Settings
 local DOT_THRESHOLD = 0.5
 local Y_THRESHOLD = 2
 local ALLOWED_BLOCKS = {} -- normalized lowercase entries
 
 -- Direction toggles
-local FRONT_ONLY = false
-local LEFT_ONLY = false
-local RIGHT_ONLY = false
-local UP_ONLY = false
-local DOWN_ONLY = false
+local directionState = {Up=false, Down=false, Left=false, Right=false}
+local function setDirection(dir, state)
+    for k in pairs(directionState) do directionState[k] = false end
+    directionState[dir] = state
+end
 
---// Highlight object
-local highlight = Instance.new("SelectionBox")
-highlight.LineThickness = 0.05
-highlight.SurfaceTransparency = 0.5
-highlight.Color3 = Color3.fromRGB(255, 0, 0)
-highlight.Parent = game.CoreGui
-
---// Custom TextBox GUI
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Parent = game.CoreGui
-ScreenGui.Name = "WhitelistGui"
-
-local textBox = Instance.new("TextBox")
-textBox.Parent = ScreenGui
-textBox.Size = UDim2.new(0, 300, 0, 30)
-textBox.Position = UDim2.new(0, 10, 0, 10)
-textBox.PlaceholderText = "Enter block names (comma separated)"
-textBox.Text = ""
-textBox.ClearTextOnFocus = false
-textBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-textBox.TextSize = 14
-
--- normalize helper
+-- Normalize strings
 local function normalize(s)
     if not s then return "" end
     s = tostring(s)
@@ -63,157 +40,209 @@ local function normalize(s)
     return s:lower()
 end
 
---// Update whitelist in real-time (comma-separated, supports spaces)
-textBox:GetPropertyChangedSignal("Text"):Connect(function()
-    ALLOWED_BLOCKS = {}
-    for word in string.gmatch(textBox.Text, '([^,]+)') do
-        local cleanWord = word:gsub("^%s*(.-)%s*$", "%1") -- trim
-        if cleanWord ~= "" then
-            local norm = normalize(cleanWord)
-            if not table.find(ALLOWED_BLOCKS, norm) then
-                table.insert(ALLOWED_BLOCKS, norm)
-            end
-        end
-    end
-    -- debug line: prints normalized whitelist
-    print("Whitelist (normalized):", unpack(ALLOWED_BLOCKS))
-end)
-
---// Helper functions
 local function isAllowedBlockByModelName(modelName)
     local n = normalize(modelName)
     for _, allowed in ipairs(ALLOWED_BLOCKS) do
-        if n == allowed then
-            return true
-        end
-        -- fallback substring match (plain find)
-        if n:find(allowed, 1, true) then
-            return true
-        end
+        if n == allowed then return true end
+        if n:find(allowed, 1, true) then return true end
     end
     return false
 end
 
+-- Direction filters
 local function passesDirectionFilters(part)
     if not part then return false end
     local pos = part.Position
     local rootPos = root.Position
-    local dirVec = pos - rootPos
+    local dirVec = (pos - rootPos)
     if dirVec.Magnitude == 0 then return false end
     local direction = dirVec.Unit
-    local lookVector = root.CFrame.LookVector
-    local rightVector = root.CFrame.RightVector
 
-    local pass = false
-
-    if FRONT_ONLY then
-        pass = pass or (lookVector:Dot(direction) > DOT_THRESHOLD)
-    end
-    if LEFT_ONLY then
-        pass = pass or ((-rightVector):Dot(direction) > DOT_THRESHOLD)
-    end
-    if RIGHT_ONLY then
-        pass = pass or (rightVector:Dot(direction) > DOT_THRESHOLD)
-    end
-    if UP_ONLY then
-        pass = pass or (pos.Y > rootPos.Y + Y_THRESHOLD)
-    end
-    if DOWN_ONLY then
-        pass = pass or (pos.Y < rootPos.Y - Y_THRESHOLD)
-    end
-
-    return pass
+    if directionState.Up then return pos.Y > rootPos.Y + Y_THRESHOLD end
+    if directionState.Down then return pos.Y < rootPos.Y - Y_THRESHOLD end
+    if directionState.Left then return (Vector3.new(-1,0,0):Dot(direction)) > 0.9 end
+    if directionState.Right then return (Vector3.new(1,0,0):Dot(direction)) > 0.9 end
 end
 
--- returns model (to send to remote) and the chosen BasePart (for position/highlight)
-local function getClosestBlockModelAndPart()
-    local closestModel = nil
-    local closestPart = nil
-    local shortestDist = math.huge
-
-    for _, model in ipairs(worldBlocks:GetChildren()) do
-        if not model:IsA("Model") and not model:IsA("BasePart") then
-            -- skip non-model/part objects
-        end
-
-        -- check model name (works for Models and also plain parts)
-        local modelName = model.Name
-        if isAllowedBlockByModelName(modelName) then
-            -- find a representative part for position: PrimaryPart > first BasePart > the object itself if it's a BasePart
-            local part = nil
-            if model:IsA("BasePart") then
-                part = model
-            else
-                part = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
-            end
-
-            if part and passesDirectionFilters(part) then
-                local dist = (part.Position - root.Position).Magnitude
-                if dist < shortestDist then
-                    shortestDist = dist
-                    closestModel = model
-                    closestPart = part
-                end
-            end
-        end
+local function getDirectionVector()
+    if directionState.Up then return Vector3.new(0, 1, 0)
+    elseif directionState.Down then return Vector3.new(0, -1, 0)
+    elseif directionState.Left then return Vector3.new(-1, 0, 0) -- world left
+    elseif directionState.Right then return Vector3.new(1, 0, 0) -- world right
     end
-
-    return closestModel, closestPart
 end
 
---// Direction Toggles (each auto-punches in that direction)
-Tab:CreateToggle({
-    Name = "Punch Forward",
-    CurrentValue = false,
-    Callback = function(Value) FRONT_ONLY = Value end
-})
+-- Highlights
+local breakerHighlight = Instance.new("SelectionBox")
+breakerHighlight.LineThickness = 0.05
+breakerHighlight.SurfaceTransparency = 0.5
+breakerHighlight.Color3 = Color3.fromRGB(255, 0, 0)
+breakerHighlight.Parent = game.CoreGui
 
-Tab:CreateToggle({
-    Name = "Punch Left",
-    CurrentValue = false,
-    Callback = function(Value) LEFT_ONLY = Value end
-})
+local nextHighlight = Instance.new("SelectionBox")
+nextHighlight.LineThickness = 0.05
+nextHighlight.SurfaceTransparency = 0.5
+nextHighlight.Color3 = Color3.fromRGB(0, 0, 255)
+nextHighlight.Parent = game.CoreGui
 
-Tab:CreateToggle({
-    Name = "Punch Right",
-    CurrentValue = false,
-    Callback = function(Value) RIGHT_ONLY = Value end
-})
+local doorHighlight = Instance.new("SelectionBox")
+doorHighlight.LineThickness = 0.05
+doorHighlight.SurfaceTransparency = 0.5
+doorHighlight.Color3 = Color3.fromRGB(0, 255, 0)
+doorHighlight.Parent = game.CoreGui
 
-Tab:CreateToggle({
-    Name = "Punch Up",
-    CurrentValue = false,
-    Callback = function(Value) UP_ONLY = Value end
-})
+-- Thin red directional line
+local redLine = Instance.new("Part")
+redLine.Anchored = true
+redLine.CanCollide = false
+redLine.Size = Vector3.new(0.1, 0.1, 10)
+redLine.Color = Color3.fromRGB(255, 0, 0)
+redLine.Material = Enum.Material.Neon
+redLine.Parent = game.CoreGui
 
-Tab:CreateToggle({
-    Name = "Punch Down",
-    CurrentValue = false,
-    Callback = function(Value) DOWN_ONLY = Value end
-})
+-- Whitelist GUI
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "WhitelistGui"
 
---// Auto Punch Loop (fixed + model-name matching)
+local BoxFrame = Instance.new("Frame", ScreenGui)
+BoxFrame.Size = UDim2.new(0, 300, 0, 60)
+BoxFrame.Position = UDim2.new(0, 100, 0, 100)
+BoxFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+BoxFrame.Active = true
+BoxFrame.Draggable = true
+
+local TextBox = Instance.new("TextBox", BoxFrame)
+TextBox.Size = UDim2.new(1, -10, 0, 40)
+TextBox.Position = UDim2.new(0, 5, 0, 10)
+TextBox.PlaceholderText = "Enter block names (comma-separated)"
+TextBox.Text = ""
+TextBox.ClearTextOnFocus = false
+
+TextBox.FocusLost:Connect(function()
+    ALLOWED_BLOCKS = {}
+    for blockName in string.gmatch(TextBox.Text, '([^,]+)') do
+        local clean = blockName:match("^%s*(.-)%s*$")
+        table.insert(ALLOWED_BLOCKS, normalize(clean))
+    end
+    print("Whitelist updated:", unpack(ALLOWED_BLOCKS))
+end)
+
+-- Direction toggles
+Tab:CreateToggle({ Name = "Punch Up", CurrentValue = false, Flag = "PunchUp", Callback = function(Value) setDirection("Up", Value) end })
+Tab:CreateToggle({ Name = "Punch Down", CurrentValue = false, Flag = "PunchDown", Callback = function(Value) setDirection("Down", Value) end })
+Tab:CreateToggle({ Name = "Punch Left", CurrentValue = false, Flag = "PunchLeft", Callback = function(Value) setDirection("Left", Value) end })
+Tab:CreateToggle({ Name = "Punch Right", CurrentValue = false, Flag = "PunchRight", Callback = function(Value) setDirection("Right", Value) end })
+
+-- Update red line every frame
 task.spawn(function()
     while true do
-        local anyDirectionOn = FRONT_ONLY or LEFT_ONLY or RIGHT_ONLY or UP_ONLY or DOWN_ONLY
-        if anyDirectionOn then
-            local model, part = getClosestBlockModelAndPart()
-            if model and part and model:IsDescendantOf(workspace) then
-                highlight.Adornee = part
+        local dirVector = getDirectionVector()
+        if dirVector then
+            redLine.CFrame = CFrame.new(root.Position + dirVector*5, root.Position + dirVector*10)
+            redLine.Size = Vector3.new(0.1, 0.1, 10)
+            redLine.Transparency = 0
+        else
+            redLine.Transparency = 1
+        end
+        task.wait(0.03)
+    end
+end)
+
+-- Auto Breaker Loop (fully dynamic, left/right fixed)
+task.spawn(function()
+    while true do
+        local dirVector = getDirectionVector()
+        if dirVector then
+            local inDirBlocks = {}
+            for _, model in ipairs(worldBlocks:GetChildren()) do
+                local part = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+                if part and passesDirectionFilters(part) and isAllowedBlockByModelName(model.Name) then
+                    local dirToBlock = (part.Position - root.Position).Unit
+                    if dirToBlock:Dot(dirVector) > 0.9 then
+                        table.insert(inDirBlocks, {model = model, part = part, dist = (part.Position - root.Position).Magnitude})
+                    end
+                end
+            end
+
+            table.sort(inDirBlocks, function(a,b) return a.dist < b.dist end)
+
+            local redPart, redModel = nil, nil
+            local bluePart, blueModel = nil, nil
+            if #inDirBlocks >= 1 then
+                redModel = inDirBlocks[1].model
+                redPart = inDirBlocks[1].part
+            end
+            for i = 2, #inDirBlocks do
+                local block = inDirBlocks[i]
+                local dirToBlock = (block.part.Position - redPart.Position).Unit
+                if dirToBlock:Dot(dirVector) > 0.9 then
+                    blueModel = block.model
+                    bluePart = block.part
+                    break
+                end
+            end
+
+            breakerHighlight.Adornee = redPart
+            nextHighlight.Adornee = bluePart
+
+            if redModel and redModel:IsDescendantOf(workspace) then
                 local children = worldBlocks:GetChildren()
-                local idx = table.find(children, model)
+                local idx = table.find(children, redModel)
                 if idx then
-                    -- send the model (or children[idx]) to the server as previous code did
                     pcall(function()
                         punchRemote:FireServer(children[idx])
                     end)
                 end
-            else
-                highlight.Adornee = nil
             end
         else
-            highlight.Adornee = nil
+            breakerHighlight.Adornee = nil
+            nextHighlight.Adornee = nil
         end
         task.wait(0.05)
     end
 end)
+
+-- Auto Door
+local autoDoorRunning = false
+Tab:CreateToggle({
+    Name = "Auto Door Enter",
+    CurrentValue = false,
+    Flag = "AutoDoor",
+    Callback = function(Value)
+        autoDoorRunning = Value
+        if Value then
+            task.spawn(function()
+                while autoDoorRunning do
+                    local lookVector = root.CFrame.LookVector
+                    local behindDirection = -lookVector
+                    local raycastParams = RaycastParams.new()
+                    raycastParams.FilterDescendantsInstances = {character}
+                    raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
+
+                    local raycastResult = workspace:Raycast(root.Position, behindDirection * 20, raycastParams)
+                    if raycastResult and raycastResult.Instance then
+                        local hit = raycastResult.Instance
+                        if hit.Name == "Door" or hit.Name == "HurtBox" then
+                            local parentBlock = hit.Name == "Door" and hit or hit.Parent
+                            if parentBlock and parentBlock:IsDescendantOf(worldBlocks) then
+                                task.wait(1)
+                                local children = worldBlocks:GetChildren()
+                                local blockIndex = table.find(children, parentBlock)
+                                if blockIndex then
+                                    punchRemote:FireServer(children[blockIndex])
+                                    doorHighlight.Adornee = parentBlock
+                                end
+                            end
+                        end
+                    else
+                        doorHighlight.Adornee = nil
+                    end
+                    task.wait(0.5)
+                end
+                doorHighlight.Adornee = nil
+            end)
+        else
+            doorHighlight.Adornee = nil
+        end
+    end
+})
