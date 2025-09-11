@@ -22,11 +22,15 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
 
 -- 🔧 SETTINGS
+local DOT_THRESHOLD = 0.5
+local Y_THRESHOLD = 2
+
+-- Direction flags
 local FRONT_ONLY = true
 local UP_ONLY = false
 local DOWN_ONLY = false
-local DOT_THRESHOLD = 0.5
-local Y_THRESHOLD = 2
+local LEFT_ONLY = false
+local RIGHT_ONLY = false
 
 -- Start with empty whitelist
 local ALLOWED_BLOCKS = {}
@@ -51,15 +55,29 @@ end
 local function passesDirectionFilters(block)
     local pos = block.Position
     local rootPos = root.Position
+    local direction = (pos - rootPos).Unit
+    local lookVector = root.CFrame.LookVector
+    local rightVector = root.CFrame.RightVector
+
+    local pass = false
+
     if FRONT_ONLY then
-        local lookVector = root.CFrame.LookVector
-        local dirToBlock = (pos - rootPos).Unit
-        local dot = lookVector:Dot(dirToBlock)
-        if dot <= DOT_THRESHOLD then return false end
+        pass = pass or (lookVector:Dot(direction) > DOT_THRESHOLD)
     end
-    if UP_ONLY and not (pos.Y > rootPos.Y + Y_THRESHOLD) then return false end
-    if DOWN_ONLY and not (pos.Y < rootPos.Y - Y_THRESHOLD) then return false end
-    return true
+    if LEFT_ONLY then
+        pass = pass or ((-rightVector):Dot(direction) > DOT_THRESHOLD)
+    end
+    if RIGHT_ONLY then
+        pass = pass or (rightVector:Dot(direction) > DOT_THRESHOLD)
+    end
+    if UP_ONLY then
+        pass = pass or (pos.Y > rootPos.Y + Y_THRESHOLD)
+    end
+    if DOWN_ONLY then
+        pass = pass or (pos.Y < rootPos.Y - Y_THRESHOLD)
+    end
+
+    return pass
 end
 
 local function getClosestBlock()
@@ -80,47 +98,71 @@ local function getClosestBlock()
 end
 
 -- ===============================
--- Toggle control for Auto Punch & Highlight
+-- Auto Punch Loop (fixed)
 -- ===============================
-local running = false
-
-local Toggle = Tab:CreateToggle({
-    Name = "Auto Punch & Highlight",
-    CurrentValue = false,
-    Flag = "AutoPunchToggle",
-    Callback = function(Value)
-        running = Value
-        if running then
-            task.spawn(function()
-                while running do
-                    local closest = getClosestBlock()
-                    if closest and closest.Parent and closest.Parent:IsDescendantOf(workspace) then
-                        highlight.Adornee = closest
-
-                        local children = worldBlocks:GetChildren()
-                        local blockIndex = table.find(children, closest.Parent)
-                        if blockIndex then
-                            local args = { [1] = children[blockIndex] }
-                            while running and children[blockIndex] and children[blockIndex]:IsDescendantOf(workspace) do
-                                punchRemote:FireServer(unpack(args))
-                                task.wait(0.05)
-                            end
-                        end
-                    else
-                        highlight.Adornee = nil
-                        task.wait(0.1)
-                    end
+task.spawn(function()
+    while true do
+        local anyDirectionOn = FRONT_ONLY or LEFT_ONLY or RIGHT_ONLY or UP_ONLY or DOWN_ONLY
+        if anyDirectionOn then
+            local closest = getClosestBlock()
+            if closest and closest.Parent and closest.Parent:IsDescendantOf(workspace) then
+                highlight.Adornee = closest
+                local children = worldBlocks:GetChildren()
+                local blockIndex = table.find(children, closest.Parent)
+                if blockIndex then
+                    local args = { [1] = children[blockIndex] }
+                    punchRemote:FireServer(unpack(args)) -- punch once per iteration
                 end
+            else
                 highlight.Adornee = nil
-            end)
+            end
         else
             highlight.Adornee = nil
         end
+        task.wait(0.05)
     end
+end)
+
+-- ===============================
+-- Direction Toggles
+-- ===============================
+local FrontToggle = Tab:CreateToggle({
+    Name = "Front",
+    CurrentValue = FRONT_ONLY,
+    Flag = "FrontToggle",
+    Callback = function(Value) FRONT_ONLY = Value end
+})
+
+local BackToggle = Tab:CreateToggle({
+    Name = "Left/Back",
+    CurrentValue = LEFT_ONLY,
+    Flag = "LeftToggle",
+    Callback = function(Value) LEFT_ONLY = Value end
+})
+
+local RightToggle = Tab:CreateToggle({
+    Name = "Right",
+    CurrentValue = RIGHT_ONLY,
+    Flag = "RightToggle",
+    Callback = function(Value) RIGHT_ONLY = Value end
+})
+
+local UpToggle = Tab:CreateToggle({
+    Name = "Up",
+    CurrentValue = UP_ONLY,
+    Flag = "UpToggle",
+    Callback = function(Value) UP_ONLY = Value end
+})
+
+local DownToggle = Tab:CreateToggle({
+    Name = "Down",
+    CurrentValue = DOWN_ONLY,
+    Flag = "DownToggle",
+    Callback = function(Value) DOWN_ONLY = Value end
 })
 
 -- ===============================
--- Custom GUI for Whitelist
+-- Custom GUI for Whitelist (Real-Time Updates)
 -- ===============================
 local PlayerGui = player:WaitForChild("PlayerGui")
 
@@ -146,19 +188,16 @@ textBox.ClearTextOnFocus = false
 textBox.Text = ""
 textBox.Parent = frame
 
--- Update whitelist when text changes
-textBox.FocusLost:Connect(function(enterPressed)
-    if enterPressed then
-        ALLOWED_BLOCKS = {}
-        for word in string.gmatch(textBox.Text, '([^,]+)') do
-            local cleanWord = word:gsub("^%s*(.-)%s*$", "%1")
-            if cleanWord ~= "" then
-                -- Avoid duplicates
-                if not table.find(ALLOWED_BLOCKS, cleanWord) then
-                    table.insert(ALLOWED_BLOCKS, cleanWord)
-                end
+-- Real-time whitelist updates
+textBox:GetPropertyChangedSignal("Text"):Connect(function()
+    ALLOWED_BLOCKS = {}
+    for word in string.gmatch(textBox.Text, '([^,]+)') do
+        local cleanWord = word:gsub("^%s*(.-)%s*$", "%1")
+        if cleanWord ~= "" then
+            if not table.find(ALLOWED_BLOCKS, cleanWord) then
+                table.insert(ALLOWED_BLOCKS, cleanWord)
             end
         end
-        print("Updated Whitelist:", unpack(ALLOWED_BLOCKS))
     end
+    print("Updated Whitelist:", unpack(ALLOWED_BLOCKS))
 end)
