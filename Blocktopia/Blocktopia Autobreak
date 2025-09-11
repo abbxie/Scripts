@@ -1,3 +1,16 @@
+--// Rayfield Setup
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+local Window = Rayfield:CreateWindow({
+   Name = "Block Highlighter & Puncher",
+   LoadingTitle = "Block Tools",
+   LoadingSubtitle = "by You",
+   Theme = "Default"
+})
+
+local Tab = Window:CreateTab("Main", 4483362458)
+local Section = Tab:CreateSection("Controls")
+
+--// Roblox Services
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
@@ -7,86 +20,200 @@ local worldBlocks = workspace:WaitForChild("WorldBlocks")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local punchRemote = ReplicatedStorage:WaitForChild("Events", 9e9):WaitForChild("PunchBlock", 9e9)
 
--- 🔧 SETTINGS
-local FRONT_ONLY = true
-local UP_ONLY = false
-local DOWN_ONLY = false
+--// Settings
 local DOT_THRESHOLD = 0.5
 local Y_THRESHOLD = 2
+local ALLOWED_BLOCKS = {} -- normalized lowercase entries
 
--- whitelist of block names
-local ALLOWED_BLOCKS = { "Dirt", "Stone", "Grass" }
+-- Direction toggles
+local FRONT_ONLY = false
+local LEFT_ONLY = false
+local RIGHT_ONLY = false
+local UP_ONLY = false
+local DOWN_ONLY = false
 
--- Highlight object
+--// Highlight object
 local highlight = Instance.new("SelectionBox")
 highlight.LineThickness = 0.05
 highlight.SurfaceTransparency = 0.5
 highlight.Color3 = Color3.fromRGB(255, 0, 0)
 highlight.Parent = game.CoreGui
 
--- Helper functions
-local function isAllowedBlock(name)
+--// Custom TextBox GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Parent = game.CoreGui
+ScreenGui.Name = "WhitelistGui"
+
+local textBox = Instance.new("TextBox")
+textBox.Parent = ScreenGui
+textBox.Size = UDim2.new(0, 300, 0, 30)
+textBox.Position = UDim2.new(0, 10, 0, 10)
+textBox.PlaceholderText = "Enter block names (comma separated)"
+textBox.Text = ""
+textBox.ClearTextOnFocus = false
+textBox.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+textBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+textBox.TextSize = 14
+
+-- normalize helper
+local function normalize(s)
+    if not s then return "" end
+    s = tostring(s)
+    s = s:gsub("^%s*(.-)%s*$", "%1") -- trim
+    return s:lower()
+end
+
+--// Update whitelist in real-time (comma-separated, supports spaces)
+textBox:GetPropertyChangedSignal("Text"):Connect(function()
+    ALLOWED_BLOCKS = {}
+    for word in string.gmatch(textBox.Text, '([^,]+)') do
+        local cleanWord = word:gsub("^%s*(.-)%s*$", "%1") -- trim
+        if cleanWord ~= "" then
+            local norm = normalize(cleanWord)
+            if not table.find(ALLOWED_BLOCKS, norm) then
+                table.insert(ALLOWED_BLOCKS, norm)
+            end
+        end
+    end
+    -- debug line: prints normalized whitelist
+    print("Whitelist (normalized):", unpack(ALLOWED_BLOCKS))
+end)
+
+--// Helper functions
+local function isAllowedBlockByModelName(modelName)
+    local n = normalize(modelName)
     for _, allowed in ipairs(ALLOWED_BLOCKS) do
-        if name == allowed then
+        if n == allowed then
+            return true
+        end
+        -- fallback substring match (plain find)
+        if n:find(allowed, 1, true) then
             return true
         end
     end
     return false
 end
 
-local function passesDirectionFilters(block)
-    local pos = block.Position
+local function passesDirectionFilters(part)
+    if not part then return false end
+    local pos = part.Position
     local rootPos = root.Position
+    local dirVec = pos - rootPos
+    if dirVec.Magnitude == 0 then return false end
+    local direction = dirVec.Unit
+    local lookVector = root.CFrame.LookVector
+    local rightVector = root.CFrame.RightVector
+
+    local pass = false
 
     if FRONT_ONLY then
-        local lookVector = root.CFrame.LookVector
-        local dirToBlock = (pos - rootPos).Unit
-        local dot = lookVector:Dot(dirToBlock)
-        if dot <= DOT_THRESHOLD then return false end
+        pass = pass or (lookVector:Dot(direction) > DOT_THRESHOLD)
     end
-    if UP_ONLY and not (pos.Y > rootPos.Y + Y_THRESHOLD) then return false end
-    if DOWN_ONLY and not (pos.Y < rootPos.Y - Y_THRESHOLD) then return false end
-    return true
+    if LEFT_ONLY then
+        pass = pass or ((-rightVector):Dot(direction) > DOT_THRESHOLD)
+    end
+    if RIGHT_ONLY then
+        pass = pass or (rightVector:Dot(direction) > DOT_THRESHOLD)
+    end
+    if UP_ONLY then
+        pass = pass or (pos.Y > rootPos.Y + Y_THRESHOLD)
+    end
+    if DOWN_ONLY then
+        pass = pass or (pos.Y < rootPos.Y - Y_THRESHOLD)
+    end
+
+    return pass
 end
 
-local function getClosestBlock()
-    local closest = nil
+-- returns model (to send to remote) and the chosen BasePart (for position/highlight)
+local function getClosestBlockModelAndPart()
+    local closestModel = nil
+    local closestPart = nil
     local shortestDist = math.huge
 
-    for _, block in ipairs(worldBlocks:GetChildren()) do
-        for _, child in ipairs(block:GetChildren()) do
-            if child:IsA("BasePart") and isAllowedBlock(child.Name) and passesDirectionFilters(child) then
-                local dist = (child.Position - root.Position).Magnitude
+    for _, model in ipairs(worldBlocks:GetChildren()) do
+        if not model:IsA("Model") and not model:IsA("BasePart") then
+            -- skip non-model/part objects
+        end
+
+        -- check model name (works for Models and also plain parts)
+        local modelName = model.Name
+        if isAllowedBlockByModelName(modelName) then
+            -- find a representative part for position: PrimaryPart > first BasePart > the object itself if it's a BasePart
+            local part = nil
+            if model:IsA("BasePart") then
+                part = model
+            else
+                part = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
+            end
+
+            if part and passesDirectionFilters(part) then
+                local dist = (part.Position - root.Position).Magnitude
                 if dist < shortestDist then
                     shortestDist = dist
-                    closest = child
+                    closestModel = model
+                    closestPart = part
                 end
             end
         end
     end
 
-    return closest
+    return closestModel, closestPart
 end
 
--- Main loop
-while task.wait(0.1) do
-    local closest = getClosestBlock()
-    if closest and closest.Parent and closest.Parent:IsDescendantOf(workspace) then
-        highlight.Adornee = closest
+--// Direction Toggles (each auto-punches in that direction)
+Tab:CreateToggle({
+    Name = "Punch Forward",
+    CurrentValue = false,
+    Callback = function(Value) FRONT_ONLY = Value end
+})
 
-        -- Get the child index of the highlighted block inside WorldBlocks
-        local children = worldBlocks:GetChildren()
-        local blockIndex = table.find(children, closest.Parent) -- parent is the WorldBlock
-        if blockIndex then
-            local args = { [1] = children[blockIndex] }
+Tab:CreateToggle({
+    Name = "Punch Left",
+    CurrentValue = false,
+    Callback = function(Value) LEFT_ONLY = Value end
+})
 
-            -- Continuously spam the remote until the block is gone
-            while children[blockIndex] and children[blockIndex]:IsDescendantOf(workspace) do
-                punchRemote:FireServer(unpack(args))
-                task.wait(0.05) -- short delay to prevent freezing
+Tab:CreateToggle({
+    Name = "Punch Right",
+    CurrentValue = false,
+    Callback = function(Value) RIGHT_ONLY = Value end
+})
+
+Tab:CreateToggle({
+    Name = "Punch Up",
+    CurrentValue = false,
+    Callback = function(Value) UP_ONLY = Value end
+})
+
+Tab:CreateToggle({
+    Name = "Punch Down",
+    CurrentValue = false,
+    Callback = function(Value) DOWN_ONLY = Value end
+})
+
+--// Auto Punch Loop (fixed + model-name matching)
+task.spawn(function()
+    while true do
+        local anyDirectionOn = FRONT_ONLY or LEFT_ONLY or RIGHT_ONLY or UP_ONLY or DOWN_ONLY
+        if anyDirectionOn then
+            local model, part = getClosestBlockModelAndPart()
+            if model and part and model:IsDescendantOf(workspace) then
+                highlight.Adornee = part
+                local children = worldBlocks:GetChildren()
+                local idx = table.find(children, model)
+                if idx then
+                    -- send the model (or children[idx]) to the server as previous code did
+                    pcall(function()
+                        punchRemote:FireServer(children[idx])
+                    end)
+                end
+            else
+                highlight.Adornee = nil
             end
+        else
+            highlight.Adornee = nil
         end
-    else
-        highlight.Adornee = nil
+        task.wait(0.05)
     end
-end
+end)
